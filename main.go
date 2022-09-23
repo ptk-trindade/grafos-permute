@@ -28,9 +28,9 @@ func main() {
 	// ----- PROCESSING -----
 	var components [][]uint32
 	var treeText string
-
+	var pathText string
 	if representation_id == "1" {
-		components, treeText = adjacencyList(lenVertex, degrees, edges)
+		components, treeText, pathText = adjacencyList(lenVertex, degrees, edges)
 	} else if representation_id == "2" {
 		// degrees, components := adjacencyMatrix(lenVertex, neighCount, edges)
 	} else {
@@ -62,6 +62,7 @@ func main() {
 	//lenVertex-1 : doesn't count the null vertex (0)
 	writeOutput(lenVertex-1, uint32(len(edges)), minDegree, maxDegree, avgDegree, medianDegree, components)
 	WriteFile("tree.txt", treeText)
+	WriteFile("path.txt", pathText)
 
 	fmt.Println("Time writing files:", time.Since(write_time))
 	fmt.Println("Time in execution:", time.Since(start_time))
@@ -76,11 +77,11 @@ edges: list of edges {{id1, id2}, ...}
 components: list of components {size, {vertexes}}
 treeText: string with the tree (node, father, level)
 */
-func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([][]uint32, string) {
+func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([][]uint32, string, string) {
 	// ----- CREATE LIST -----
 	adjacency := make([][]uint32, lenVertex)
 
-	// allocate memory for the slices
+	// allocate memory for the slices (not crucial decreases memory allocation)
 	for i := uint32(0); i < lenVertex; i++ {
 		log.Println("node: ", i, " neigh_qnt: ", neighCount[i])
 		adjacency[i] = make([]uint32, 0, neighCount[i])
@@ -196,5 +197,51 @@ func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([]
 		fmt.Println("Time finding components:", time.Since(components_time))
 	}
 
-	return components, treeText
+	// ----- FIND PATH -----
+	fmt.Println("\nFind path:")
+	var pathText string
+	var path_start_str string
+	var path_end_str string
+	var end_id64 uint64
+	for {
+		valid = false
+		for !valid {
+			fmt.Println("\nInser the id of the start node (or 0 to exit):")
+			fmt.Scan(&path_start_str)
+
+			start_id64, err = strconv.ParseUint(path_start_str, 10, 32)
+			if err == nil && uint32(start_id64) < lenVertex {
+				valid = true
+			}
+		}
+
+		if path_start_str == "0" {
+			break
+		}
+
+		valid = false
+		for !valid {
+			fmt.Println("\nInser the id of the end node:")
+			fmt.Scan(&path_end_str)
+
+			end_id64, err = strconv.ParseUint(path_end_str, 10, 32)
+			if err == nil && uint32(end_id64) < lenVertex {
+				valid = true
+			}
+		}
+
+		path_time := time.Now()
+
+		path := findPathList(adjacency, uint32(start_id64), uint32(end_id64))
+
+		pathText += "Path from " + path_start_str + " to " + path_end_str + "(distance: " + strconv.Itoa(len(path)) + ")\n"
+		for i := len(path) - 1; i >= 0; i-- {
+			pathText += fmt.Sprintf("%d -> ", path[i])
+		}
+		pathText += "\n\n"
+
+		fmt.Println("Time finding path:", time.Since(path_time))
+	}
+
+	return components, treeText, pathText
 }
