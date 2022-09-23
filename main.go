@@ -27,10 +27,9 @@ func main() {
 
 	// ----- PROCESSING -----
 	var components [][]uint32
-	var treeText string
-	var pathText string
+	var treeText, pathText, diameterText string
 	if representation_id == "1" {
-		components, treeText, pathText = adjacencyList(lenVertex, degrees, edges)
+		components, treeText, pathText, diameterText = adjacencyList(lenVertex, degrees, edges)
 	} else if representation_id == "2" {
 		// degrees, components := adjacencyMatrix(lenVertex, neighCount, edges)
 	} else {
@@ -63,6 +62,7 @@ func main() {
 	writeOutput(lenVertex-1, uint32(len(edges)), minDegree, maxDegree, avgDegree, medianDegree, components)
 	WriteFile("tree.txt", treeText)
 	WriteFile("path.txt", pathText)
+	WriteFile("diameter.txt", diameterText)
 
 	fmt.Println("Time writing files:", time.Since(write_time))
 	fmt.Println("Time in execution:", time.Since(start_time))
@@ -76,8 +76,10 @@ edges: list of edges {{id1, id2}, ...}
 ---
 components: list of components {size, {vertexes}}
 treeText: string with the tree (node, father, level)
+pathText: string with paths
+diameterText: string with the diameter of graph
 */
-func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([][]uint32, string, string) {
+func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([][]uint32, string, string, string) {
 	// ----- CREATE LIST -----
 	adjacency := make([][]uint32, lenVertex)
 
@@ -90,12 +92,9 @@ func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([]
 	log.Println("len edges: ", len(edges))
 	// fill the slices
 	for i := uint32(0); i < uint32(len(edges)); i++ {
-		log.Println("neighbors: ", edges[i][0], edges[i][1])
 		adjacency[edges[i][0]] = append(adjacency[edges[i][0]], edges[i][1])
 		adjacency[edges[i][1]] = append(adjacency[edges[i][1]], edges[i][0])
-		fmt.Println(adjacency)
 	}
-	fmt.Println("Lista logo apos criada: ", adjacency)
 
 	// ----- GET USER INPUT -----
 	// pick BFS or DFS
@@ -234,7 +233,7 @@ func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([]
 
 		path := findPathList(adjacency, uint32(start_id64), uint32(end_id64))
 
-		pathText += "Path from " + path_start_str + " to " + path_end_str + "(distance: " + strconv.Itoa(len(path)) + ")\n"
+		pathText += "Path from " + path_start_str + " to " + path_end_str + "(distance: " + strconv.Itoa(len(path)-1) + ")\n"
 		for i := len(path) - 1; i >= 0; i-- {
 			pathText += fmt.Sprintf("%d -> ", path[i])
 		}
@@ -243,5 +242,13 @@ func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([]
 		fmt.Println("Time finding path:", time.Since(path_time))
 	}
 
-	return components, treeText, pathText
+	// ----- FIND DIAMETER -----
+	fmt.Println("\nFind diameter:")
+	diameter_time := time.Now()
+	diameter, v1, v2 := findDiameterList(adjacency)
+	diameterText := "Diameter: " + strconv.Itoa(int(diameter)) + "\n"
+	diameterText += "From vertex " + strconv.Itoa(int(v1)) + " to " + strconv.Itoa(int(v2)) + "\n"
+	fmt.Println("Time finding diameter:", time.Since(diameter_time))
+
+	return components, treeText, pathText, diameterText
 }

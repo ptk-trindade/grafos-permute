@@ -84,20 +84,22 @@ path {end, ..., start}
 func findPathList(adjacency [][]uint32, root uint32, end uint32) []uint32 {
 	// ----- BFS -----
 	father := make([]uint32, len(adjacency))
-	father[root] = 0
-	queue := [][]uint32{{root, 0}} // {node, level}
+	queue := [][2]uint32{{root, 0}} // {node, level}
+	father[root] = root
 
 	found := false
 	// create tree
 	for !found && len(queue) > 0 {
+
 		// pop()
 		current := queue[0]
 		queue = queue[1:]
+
 		// add neighbors to queue
 		for _, neighbor := range adjacency[current[0]] {
 			if father[neighbor] == 0 {
 				father[neighbor] = current[0]
-				queue = append(queue, []uint32{neighbor, current[1] + 1})
+				queue = append(queue, [2]uint32{neighbor, current[1] + 1})
 			}
 			if neighbor == end {
 				found = true
@@ -106,11 +108,38 @@ func findPathList(adjacency [][]uint32, root uint32, end uint32) []uint32 {
 		}
 	}
 
-	// if no path found return {end, 0}
+	// if no path found return empty path
+	if father[end] == 0 {
+		return []uint32{}
+	}
+
 	path := []uint32{end}
 	for path[len(path)-1] != root {
 		path = append(path, father[path[len(path)-1]])
 	}
 
 	return path
+}
+
+/*
+Calls the BFS for each vertex and return the depth of the highest
+--- in:
+adjacency: adjaency list
+--- out:
+diameter: the max min distance between any two vertices
+vextex1, vertex2: the two vertices with the max min distance
+*/
+func findDiameterList(adjacency [][]uint32) (uint32, uint32, uint32) {
+	var diameter, vertex1, vertex2 uint32
+	for i := range adjacency {
+		tree := bfsList(adjacency, uint32(i))
+		lastVertex := tree[len(tree)-1]
+		if lastVertex[2] > diameter { // level > max
+			vertex1 = uint32(i)
+			vertex2 = lastVertex[0]
+			diameter = lastVertex[2]
+		}
+	}
+
+	return diameter, vertex1, vertex2
 }
