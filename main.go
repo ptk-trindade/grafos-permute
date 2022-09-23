@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	filename := "MST.txt"
+	filename := "grafo.txt"
 
 	fmt.Println(" --- START ---")
 
@@ -31,12 +31,12 @@ func main() {
 	if representation_id == "1" {
 		components, treeText, pathText, diameterText = adjacencyList(lenVertex, degrees, edges)
 	} else if representation_id == "2" {
-		// degrees, components := adjacencyMatrix(lenVertex, neighCount, edges)
+		components, treeText, pathText, diameterText = adjacencyMatrix(lenVertex, degrees, edges)
 	} else {
 		log.Fatal("Invalid option")
 	}
 
-	// CALCULATE MEDIANS
+	// ----- EDGES.DESCRIBE() -----
 	degrees = degrees[1:] // removes the first element (0)
 	// Sum degrees
 	sort.Slice(degrees, func(i, j int) bool { return degrees[i] < degrees[j] })
@@ -83,7 +83,7 @@ func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([]
 	// ----- CREATE LIST -----
 	adjacency := make([][]uint32, lenVertex)
 
-	// allocate memory for the slices (not crucial decreases memory allocation)
+	// allocate memory for the slices (not crucial but decreases memory allocation)
 	for i := uint32(0); i < lenVertex; i++ {
 		log.Println("node: ", i, " neigh_qnt: ", neighCount[i])
 		adjacency[i] = make([]uint32, 0, neighCount[i])
@@ -246,6 +246,180 @@ func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([]
 	fmt.Println("\nFind diameter:")
 	diameter_time := time.Now()
 	diameter, v1, v2 := findDiameterList(adjacency)
+	diameterText := "Diameter: " + strconv.Itoa(int(diameter)) + "\n"
+	diameterText += "From vertex " + strconv.Itoa(int(v1)) + " to " + strconv.Itoa(int(v2)) + "\n"
+	fmt.Println("Time finding diameter:", time.Since(diameter_time))
+
+	return components, treeText, pathText, diameterText
+}
+
+func adjacencyMatrix(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([][]uint32, string, string, string) {
+	// ----- CREATE MATRIX -----
+	adjacency := make([][]uint8, lenVertex)
+
+	// allocate memory for the slices (not crucial decreases memory allocation)
+	for i := uint32(0); i < lenVertex; i++ {
+		adjacency[i] = make([]uint8, lenVertex)
+	}
+
+	log.Println("len edges: ", len(edges))
+	// fill the slices
+	for i := uint32(0); i < uint32(len(edges)); i++ {
+		adjacency[edges[i][0]][edges[i][1]] = 1
+		adjacency[edges[i][1]][edges[i][0]] = 1
+	}
+
+	fmt.Println("adjacency matrix: ", adjacency)
+
+	// ----- GET USER INPUT -----
+	// pick BFS or DFS
+	search_id := "0"
+	for search_id != "1" && search_id != "2" {
+		fmt.Println("\nChoose an option:")
+		fmt.Println("1 - Breadth First Search (BFS)")
+		fmt.Println("2 - Depth First Search (DFS)")
+		fmt.Scan(&search_id)
+	}
+
+	// pick start vertex
+	var start_id uint32
+	var start_id64 uint64
+	var start_id_str string
+	var err error
+	valid := false
+	for !valid {
+		fmt.Println("\nInser the id of the start node:")
+		fmt.Scan(&start_id_str)
+
+		start_id64, err = strconv.ParseUint(start_id_str, 10, 32)
+		if err == nil && uint32(start_id64) < lenVertex {
+			valid = true
+		}
+	}
+	start_id = uint32(start_id64)
+
+	// ----- FIND TREE -----
+	start_time := time.Now()
+	log.Println("start_id: ", start_id)
+	var tree [][3]uint32
+	if search_id == "1" {
+		tree = bfsMatrix(adjacency, start_id)
+	} else if search_id == "2" {
+		tree = dfsMatrix(adjacency, start_id)
+	} else {
+		log.Fatal("Invalid option")
+	}
+
+	treeText := "node\tfather\tlevel"
+	components := [][]uint32{{}} // {{vertex1, vextex2, ...}, ...}
+	for _, node := range tree {
+		treeText += fmt.Sprintf("\n%d\t\t%d\t\t%d", node[0], node[1], node[2])
+		components[0] = append(components[0], node[0])
+	}
+
+	fmt.Println("Time processing search tree:", time.Since(start_time))
+
+	// ----- FIND COMPONENTS -----
+	find_compnents := "0"
+	for find_compnents != "1" && find_compnents != "2" {
+		fmt.Println("\nFind all the components:")
+		fmt.Println("1 - Yes")
+		fmt.Println("2 - No")
+		fmt.Scan(&find_compnents)
+	}
+
+	if find_compnents == "1" {
+		components_time := time.Now()
+		visited_vec := make([]*Node, lenVertex)
+		visited_lis := List{nil, nil}
+
+		// fill visited list
+		for i := uint32(1); i < lenVertex; i++ {
+			node := visited_lis.Push(i)
+			visited_vec[i] = node
+		}
+
+		// while there are unvisited nodes
+		for {
+			visited_lis.Display() // log
+
+			//clear visited nodes from list
+			for _, tuple := range tree {
+				visited_lis.Remove(visited_vec[tuple[0]])
+			}
+
+			if visited_lis.head == nil {
+				break
+			}
+
+			// find new component
+			start_id = visited_lis.head.value
+
+			fmt.Println("start_id: ", start_id)
+			tree = bfsMatrix(adjacency, start_id)
+			fmt.Println("tree: ", tree)
+
+			// create components slice
+			components = append(components, []uint32{})
+			for _, node := range tree {
+				components[len(components)-1] = append(components[len(components)-1], node[0])
+			}
+			fmt.Println("components: ", components)
+		}
+
+		fmt.Println("Time finding components:", time.Since(components_time))
+	}
+
+	// ----- FIND PATH -----
+	fmt.Println("\nFind path:")
+	var pathText string
+	var path_start_str string
+	var path_end_str string
+	var end_id64 uint64
+	for {
+		valid = false
+		for !valid {
+			fmt.Println("\nInsert the id of the start node (or 0 to exit):")
+			fmt.Scan(&path_start_str)
+
+			start_id64, err = strconv.ParseUint(path_start_str, 10, 32)
+			if err == nil && uint32(start_id64) < lenVertex {
+				valid = true
+			}
+		}
+
+		if path_start_str == "0" {
+			break
+		}
+
+		valid = false
+		for !valid {
+			fmt.Println("\nInser the id of the end node:")
+			fmt.Scan(&path_end_str)
+
+			end_id64, err = strconv.ParseUint(path_end_str, 10, 32)
+			if err == nil && uint32(end_id64) < lenVertex {
+				valid = true
+			}
+		}
+
+		path_time := time.Now()
+
+		path := findPathMatrix(adjacency, uint32(start_id64), uint32(end_id64))
+
+		pathText += "Path from " + path_start_str + " to " + path_end_str + "(distance: " + strconv.Itoa(len(path)-1) + ")\n"
+		for i := len(path) - 1; i >= 0; i-- {
+			pathText += fmt.Sprintf("%d -> ", path[i])
+		}
+		pathText += "\n\n"
+
+		fmt.Println("Time finding path:", time.Since(path_time))
+	}
+
+	// ----- FIND DIAMETER -----
+	fmt.Println("\nFind diameter:")
+	diameter_time := time.Now()
+	diameter, v1, v2 := findDiameterMatrix(adjacency)
 	diameterText := "Diameter: " + strconv.Itoa(int(diameter)) + "\n"
 	diameterText += "From vertex " + strconv.Itoa(int(v1)) + " to " + strconv.Itoa(int(v2)) + "\n"
 	fmt.Println("Time finding diameter:", time.Since(diameter_time))

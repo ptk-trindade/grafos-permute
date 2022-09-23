@@ -1,15 +1,17 @@
 ﻿package main
 
+import "fmt"
+
 // import "fmt"
 
 /*
 --- in:
-adjacency: adjacency list
+adjacency: adjacency matrix
 start: start vertex
 --- out:
 tree {{node, father, level}, ...}
 */
-func bfsList(adjacency [][]uint32, start uint32) [][3]uint32 {
+func bfsMatrix(adjacency [][]uint8, start uint32) [][3]uint32 {
 	// ----- BFS -----
 	visited := make([]bool, len(adjacency))
 	visited[start] = true
@@ -23,8 +25,8 @@ func bfsList(adjacency [][]uint32, start uint32) [][3]uint32 {
 		current := queue[0]
 		queue = queue[1:]
 		// add neighbors to queue
-		for _, neighbor := range adjacency[current[0]] {
-			if !visited[neighbor] {
+		for neighbor := uint32(1); neighbor < uint32(len(adjacency[current[0]])); neighbor++ { // skip null vertex (0)
+			if adjacency[current[0]][neighbor] == 1 && !visited[neighbor] {
 				visited[neighbor] = true
 				queue = append(queue, []uint32{neighbor, current[1] + 1})
 				tree = append(tree, [3]uint32{neighbor, current[0], current[1] + 1})
@@ -37,12 +39,12 @@ func bfsList(adjacency [][]uint32, start uint32) [][3]uint32 {
 
 /*
 --- in:
-adjacency: adjacency list
+adjacency: adjacency matrix
 start: start vertex
 --- out:
 tree {{node, father, level}, ...}
 */
-func dfsList(adjacency [][]uint32, start uint32) [][3]uint32 {
+func dfsMatrix(adjacency [][]uint8, start uint32) [][3]uint32 {
 	// ----- DFS -----
 	visited := make([]bool, len(adjacency))
 
@@ -61,8 +63,8 @@ func dfsList(adjacency [][]uint32, start uint32) [][3]uint32 {
 			tree = append(tree, current)
 
 			// add neighbors to queue
-			for _, neighbor := range adjacency[current[0]] {
-				if !visited[neighbor] {
+			for neighbor := uint32(1); neighbor < uint32(len(adjacency[current[0]])); neighbor++ { // skip null vertex (0)
+				if adjacency[current[0]][neighbor] == 1 && !visited[neighbor] {
 					stack = append(stack, [3]uint32{neighbor, current[0], current[2] + 1})
 				}
 			}
@@ -75,13 +77,13 @@ func dfsList(adjacency [][]uint32, start uint32) [][3]uint32 {
 /*
 Finds the shortest path between two vertices in a graph. (BFS)
 --- in:
-adjacency: adjacency list
+adjacency: adjacency Matrix
 start: start vertex
 goal: destination vertex
 --- out:
 path {end, ..., start}
 */
-func findPathList(adjacency [][]uint32, root uint32, end uint32) []uint32 {
+func findPathMatrix(adjacency [][]uint8, root uint32, end uint32) []uint32 {
 	// ----- BFS -----
 	father := make([]uint32, len(adjacency))
 	queue := [][2]uint32{{root, 0}} // {node, level}
@@ -90,24 +92,28 @@ func findPathList(adjacency [][]uint32, root uint32, end uint32) []uint32 {
 	found := false
 	// create tree
 	for !found && len(queue) > 0 {
-
 		// pop()
 		current := queue[0]
 		queue = queue[1:]
 
 		// add neighbors to queue
-		for _, neighbor := range adjacency[current[0]] {
-			if father[neighbor] == 0 {
-				father[neighbor] = current[0]
-				queue = append(queue, [2]uint32{neighbor, current[1] + 1})
-			}
-			if neighbor == end {
-				found = true
-				break
+		for neighbor := uint32(1); neighbor < uint32(len(adjacency[current[0]])); neighbor++ { // skip null vertex (0)
+			if adjacency[current[0]][neighbor] == 1 {
+				if father[neighbor] == 0 {
+					father[neighbor] = current[0]
+					queue = append(queue, [2]uint32{neighbor, current[1] + 1})
+				}
+				if neighbor == end {
+					fmt.Println("found")
+					fmt.Println("cur", current[0], "fat", father[neighbor])
+					found = true
+					break
+				}
 			}
 		}
 	}
 
+	fmt.Println("f: ", father[end])
 	// if no path found return empty path
 	if father[end] == 0 {
 		return []uint32{}
@@ -124,15 +130,15 @@ func findPathList(adjacency [][]uint32, root uint32, end uint32) []uint32 {
 /*
 Calls the BFS for each vertex and return the depth of the highest
 --- in:
-adjacency: adjacency list
+adjacency: adjacency matrix
 --- out:
 diameter: the max min distance between any two vertices
 vextex1, vertex2: the two vertices with the max min distance
 */
-func findDiameterList(adjacency [][]uint32) (uint32, uint32, uint32) {
+func findDiameterMatrix(adjacency [][]uint8) (uint32, uint32, uint32) {
 	var diameter, vertex1, vertex2 uint32
-	for i, _ := range adjacency {
-		tree := bfsList(adjacency, uint32(i))
+	for i := uint32(1); i < uint32(len(adjacency)); i++ {
+		tree := bfsMatrix(adjacency, i)
 		lastVertex := tree[len(tree)-1]
 		if lastVertex[2] > diameter { // level > max
 			vertex1 = uint32(i)
