@@ -13,6 +13,10 @@ func main() {
 
 	fmt.Println(" --- START ---")
 
+	start_time := time.Now()
+	lenVertex, degrees, edges := readInitFile(filename) // reads the file and returns the vertexes and edges
+	fmt.Println("Time reading files:", time.Since(start_time))
+
 	representation_id := "0"
 	for representation_id != "1" && representation_id != "2" {
 		fmt.Println("\nChoose an option:")
@@ -20,10 +24,6 @@ func main() {
 		fmt.Println("2 - Adjacency Matrix")
 		fmt.Scan(&representation_id)
 	}
-
-	start_time := time.Now()
-	lenVertex, degrees, edges := readInitFile(filename) // reads the file and returns the vertexes and edges
-	fmt.Println("Time reading files:", time.Since(start_time))
 
 	// ----- PROCESSING -----
 	var components [][]uint32
@@ -40,14 +40,10 @@ func main() {
 	degrees = degrees[1:] // removes the first element (0)
 	// Sum degrees
 	sort.Slice(degrees, func(i, j int) bool { return degrees[i] < degrees[j] })
-	sum := uint32(0)
-	for _, degree := range degrees { // for each vertex
-		sum += degree
-	}
 
-	maxDegree := uint32(degrees[len(degrees)-1])      // last element
-	minDegree := uint32(degrees[0])                   // first element
-	avgDegree := float32(sum) / float32(len(degrees)) // average degree
+	maxDegree := uint32(degrees[len(degrees)-1])            // last element
+	minDegree := uint32(degrees[0])                         // first element
+	avgDegree := float32(len(edges)*2) / float32(lenVertex) // average degree
 	var medianDegree float32
 	if len(degrees)%2 == 0 {
 		medianDegree = float32(degrees[len(degrees)/2-1]+degrees[len(degrees)/2]) / 2
@@ -67,6 +63,8 @@ func main() {
 	fmt.Println("Time writing files:", time.Since(write_time))
 	fmt.Println("Time in execution:", time.Since(start_time))
 	fmt.Println(" --- END ---")
+	fmt.Println("Enter anything to exit")
+	fmt.Scan(&representation_id)
 }
 
 /*
@@ -83,13 +81,13 @@ func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([]
 	// ----- CREATE LIST -----
 	adjacency := make([][]uint32, lenVertex)
 
+	log.Println("Allocating slices")
 	// allocate memory for the slices (not crucial but decreases memory allocation)
 	for i := uint32(0); i < lenVertex; i++ {
-		log.Println("node: ", i, " neigh_qnt: ", neighCount[i])
 		adjacency[i] = make([]uint32, 0, neighCount[i])
 	}
 
-	log.Println("len edges: ", len(edges))
+	log.Println("len flling edges: ", len(edges))
 	// fill the slices
 	for i := uint32(0); i < uint32(len(edges)); i++ {
 		adjacency[edges[i][0]] = append(adjacency[edges[i][0]], edges[i][1])
@@ -128,7 +126,6 @@ func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([]
 	log.Println("start_id: ", start_id)
 	var tree [][3]uint32
 	if search_id == "1" {
-		fmt.Print("Lista que foi passada: ", adjacency)
 		tree = bfsList(adjacency, start_id)
 	} else if search_id == "2" {
 		tree = dfsList(adjacency, start_id)
@@ -220,7 +217,7 @@ func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([]
 
 		valid = false
 		for !valid {
-			fmt.Println("\nInser the id of the end node:")
+			fmt.Println("\nInsert the id of the end node:")
 			fmt.Scan(&path_end_str)
 
 			end_id64, err = strconv.ParseUint(path_end_str, 10, 32)
@@ -244,8 +241,21 @@ func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([]
 
 	// ----- FIND DIAMETER -----
 	fmt.Println("\nFind diameter:")
+	quick_run := "0"
+	for quick_run != "1" && quick_run != "2" {
+		fmt.Println("\nRun in quick mode (diameter found might be lower than the real):")
+		fmt.Println("1 - Yes")
+		fmt.Println("2 - No")
+		fmt.Scan(&quick_run)
+	}
+
+	var diameter, v1, v2 uint32
 	diameter_time := time.Now()
-	diameter, v1, v2 := findDiameterList(adjacency)
+	if quick_run == "1" {
+		diameter, v1, v2 = findDiameterQuickList(adjacency)
+	} else {
+		diameter, v1, v2 = findDiameterList(adjacency)
+	}
 	diameterText := "Diameter: " + strconv.Itoa(int(diameter)) + "\n"
 	diameterText += "From vertex " + strconv.Itoa(int(v1)) + " to " + strconv.Itoa(int(v2)) + "\n"
 	fmt.Println("Time finding diameter:", time.Since(diameter_time))
@@ -268,8 +278,6 @@ func adjacencyMatrix(lenVertex uint32, neighCount []uint32, edges [][2]uint32) (
 		adjacency[edges[i][0]][edges[i][1]] = 1
 		adjacency[edges[i][1]][edges[i][0]] = 1
 	}
-
-	fmt.Println("adjacency matrix: ", adjacency)
 
 	// ----- GET USER INPUT -----
 	// pick BFS or DFS
@@ -364,7 +372,6 @@ func adjacencyMatrix(lenVertex uint32, neighCount []uint32, edges [][2]uint32) (
 			for _, node := range tree {
 				components[len(components)-1] = append(components[len(components)-1], node[0])
 			}
-			fmt.Println("components: ", components)
 		}
 
 		fmt.Println("Time finding components:", time.Since(components_time))
@@ -418,8 +425,21 @@ func adjacencyMatrix(lenVertex uint32, neighCount []uint32, edges [][2]uint32) (
 
 	// ----- FIND DIAMETER -----
 	fmt.Println("\nFind diameter:")
+	quick_run := "0"
+	for quick_run != "1" && quick_run != "2" {
+		fmt.Println("\nRun in quick mode (diameter found might be lower than the real):")
+		fmt.Println("1 - Yes")
+		fmt.Println("2 - No")
+		fmt.Scan(&quick_run)
+	}
+
+	var diameter, v1, v2 uint32
 	diameter_time := time.Now()
-	diameter, v1, v2 := findDiameterMatrix(adjacency)
+	if quick_run == "1" {
+		diameter, v1, v2 = findDiameterQuickMatrix(adjacency)
+	} else {
+		diameter, v1, v2 = findDiameterMatrix(adjacency)
+	}
 	diameterText := "Diameter: " + strconv.Itoa(int(diameter)) + "\n"
 	diameterText += "From vertex " + strconv.Itoa(int(v1)) + " to " + strconv.Itoa(int(v2)) + "\n"
 	fmt.Println("Time finding diameter:", time.Since(diameter_time))

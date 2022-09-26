@@ -1,7 +1,5 @@
 ﻿package main
 
-import "fmt"
-
 // import "fmt"
 
 /*
@@ -104,8 +102,6 @@ func findPathMatrix(adjacency [][]uint8, root uint32, end uint32) []uint32 {
 					queue = append(queue, [2]uint32{neighbor, current[1] + 1})
 				}
 				if neighbor == end {
-					fmt.Println("found")
-					fmt.Println("cur", current[0], "fat", father[neighbor])
 					found = true
 					break
 				}
@@ -113,7 +109,6 @@ func findPathMatrix(adjacency [][]uint8, root uint32, end uint32) []uint32 {
 		}
 	}
 
-	fmt.Println("f: ", father[end])
 	// if no path found return empty path
 	if father[end] == 0 {
 		return []uint32{}
@@ -146,6 +141,27 @@ func findDiameterMatrix(adjacency [][]uint8) (uint32, uint32, uint32) {
 			diameter = lastVertex[2]
 		}
 	}
+
+	return diameter, vertex1, vertex2
+}
+
+/*
+Calls the BFS for one vertex and consider the most distant vertex to be one vertice of the diameter
+--- in:
+adjacency: adjacency matrix
+--- out:
+diameter: the max min distance between any two vertices
+vextex1, vertex2: the two vertices with the max min distance
+*/
+func findDiameterQuickMatrix(adjacency [][]uint8) (uint32, uint32, uint32) {
+
+	tree := bfsMatrix(adjacency, 1) // start from vertex 1 (could be anyone)
+	vertex1 := tree[len(tree)-1][0] // last vertex in the tree (peripheral vertex)
+
+	tree = bfsMatrix(adjacency, vertex1) // start from the peripheral vertex
+	lastVertex := tree[len(tree)-1]
+	vertex2 := lastVertex[0]
+	diameter := lastVertex[2]
 
 	return diameter, vertex1, vertex2
 }

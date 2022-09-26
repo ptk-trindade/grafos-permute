@@ -131,7 +131,7 @@ vextex1, vertex2: the two vertices with the max min distance
 */
 func findDiameterList(adjacency [][]uint32) (uint32, uint32, uint32) {
 	var diameter, vertex1, vertex2 uint32
-	for i, _ := range adjacency {
+	for i := range adjacency {
 		tree := bfsList(adjacency, uint32(i))
 		lastVertex := tree[len(tree)-1]
 		if lastVertex[2] > diameter { // level > max
@@ -140,6 +140,27 @@ func findDiameterList(adjacency [][]uint32) (uint32, uint32, uint32) {
 			diameter = lastVertex[2]
 		}
 	}
+
+	return diameter, vertex1, vertex2
+}
+
+/*
+Calls the BFS for one vertex and consider the most distant vertex to be one vertice of the diameter
+--- in:
+adjacency: adjacency matrix
+--- out:
+diameter: the max min distance between any two vertices
+vextex1, vertex2: the two vertices with the max min distance
+*/
+func findDiameterQuickList(adjacency [][]uint32) (uint32, uint32, uint32) {
+
+	tree := bfsList(adjacency, 1) // start from vertex 1 (any vertex would work)
+	vertex1 := tree[len(tree)-1][0]
+
+	tree = bfsList(adjacency, vertex1)
+	lastVertex := tree[len(tree)-1]
+	vertex2 := lastVertex[0]
+	diameter := lastVertex[2]
 
 	return diameter, vertex1, vertex2
 }
