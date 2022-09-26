@@ -95,7 +95,6 @@ func readInitFile(filename string) (uint32, []uint32, [][2]uint32) {
 		node2id64, _ := strconv.ParseUint(edgeSlice[2], 10, 32)
 		// weight, _ := strconv.ParseFloat(edgeSlice[3], 32)
 
-		fmt.Println("nodes: ", node1id64, node2id64)
 		neighCount[node1id64]++
 		neighCount[node2id64]++
 		edges = append(edges, [2]uint32{uint32(node1id64), uint32(node2id64)}) // add edge to slice
