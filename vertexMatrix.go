@@ -1,6 +1,6 @@
 ﻿package main
 
-// import "fmt"
+import "sort"
 
 /*
 --- in:
@@ -164,4 +164,23 @@ func findDiameterQuickMatrix(adjacency [][]uint8) (uint32, uint32, uint32) {
 	diameter := lastVertex[2]
 
 	return diameter, vertex1, vertex2
+}
+
+func findComponentsMatrix(adjacency [][]uint8) [][]uint32 {
+	visited := make([]bool, len(adjacency))
+	components := make([][]uint32, 0)
+	for i := range adjacency {
+		if !visited[i] {
+			tree := bfsMatrix(adjacency, uint32(i))
+			components[len(components)] = make([]uint32, len(tree))
+			for _, vertex := range tree {
+				visited[vertex[0]] = true
+				components[len(components)-1] = append(components[len(components)-1], vertex[0])
+			}
+		}
+	}
+
+	sort.Slice(components, func(i, j int) bool { return len(components[i]) < len(components[j]) }) // ascending order
+
+	return components
 }
