@@ -3,7 +3,6 @@
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
@@ -50,7 +49,10 @@ func ReadFile(filename string) []string {
 }
 
 func WriteFile(filename string, text string) {
-	err := ioutil.WriteFile(filename, []byte(text), 0644)
+	err := os.WriteFile(filename, []byte(text), 0644)
+	// check(err)
+
+	// err := ioutil.WriteFile(filename, []byte(text), 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
