@@ -7,11 +7,29 @@ import (
 	"time"
 )
 
-func main() {
+func tests() {
+	fmt.Print("1.Matrix\n2.List\ninsert: ")
+	var mat_list string
+	fmt.Scan(&mat_list)
 
-	filename := "grafo_1.txt"
-	// testsList(filename)
-	testsMatrix(filename)
+	fmt.Print("graph number (2 to 5)\ninsert: ")
+	var graph_num string
+	fmt.Scan(&graph_num)
+
+	filename := "grafo_" + graph_num + ".txt"
+	if mat_list == "1" {
+		testsMatrix(filename)
+
+	} else if mat_list == "2" {
+		testsList(filename)
+
+	} else {
+		log.Fatal("invalid input")
+
+	}
+
+	fmt.Println(" --- end --- ")
+	fmt.Scan(&graph_num)
 }
 
 func testsList(filename string) {
@@ -118,14 +136,14 @@ func testsList(filename string) {
 
 	// test 5: distance between vertex (10, 20) (10, 30), (20, 30)
 	fmt.Println("\n --- TEST 5 (Distances) ---")
-
-	path := findPathList(adjacency, 10, 20)
+	// CHANGE THIS!!
+	path := findPathList(adjacency, 1, 2)
 	fmt.Println("Distance between 10 and 20: ", len(path)-1)
 
-	path = findPathList(adjacency, 10, 30)
+	path = findPathList(adjacency, 1, 3)
 	fmt.Println("Distance between 10 and 30: ", len(path)-1)
 
-	path = findPathList(adjacency, 20, 30)
+	path = findPathList(adjacency, 2, 3)
 	fmt.Println("Distance between 20 and 30: ", len(path)-1)
 
 	// test 6: Connected components
@@ -137,22 +155,45 @@ func testsList(filename string) {
 	fmt.Println("Time finding components:", time.Since(components_time))
 	fmt.Println("Number of components:", len(components))
 
+	bigger := 0
+	smaller := int(lenVertex)
+	for _, v := range components {
+		size := len(v)
+		if size > bigger {
+			bigger = size
+		}
+		if size < smaller {
+			smaller = size
+		}
+	}
+
+	fmt.Println("Bigger components:", bigger)
+	fmt.Println("Smaller components:", smaller)
+
 	// test 7: Diameter
 	fmt.Println("\n --- TEST 7 (Diameter) ---")
+	var diameter_time time.Time
+	var diameter uint32
 
-	diameter_time := time.Now()
-	diameter, _, _ := findDiameterList(adjacency)
-
-	fmt.Println("Time finding diameter (slow):", time.Since(diameter_time))
-	fmt.Println("Diameter:", diameter)
-
+	// fast
 	diameter_time = time.Now()
-	diameter, _, _ = findDiameterQuickList(adjacency)
+	var component_vertex []uint32
+	for _, component := range components { // get one vertex of each component
+		component_vertex = append(component_vertex, component[0])
+	}
+	diameter, _, _ = findDiameterQuickList(adjacency, component_vertex)
 
 	fmt.Println("Time finding diameter (fast):", time.Since(diameter_time))
 	fmt.Println("Diameter:", diameter)
 
-	fmt.Println("\n --- END TESTS ---")
+	// slow
+	diameter_time = time.Now()
+	diameter, _, _ = findDiameterList(adjacency)
+
+	fmt.Println("Time finding diameter (slow):", time.Since(diameter_time))
+	fmt.Println("Diameter:", diameter)
+
+	fmt.Println("\n --- END LIST ---")
 }
 
 func testsMatrix(filename string) {
@@ -209,88 +250,94 @@ func testsMatrix(filename string) {
 	}
 	fmt.Println("Time 1000 DFS:", time.Since(start_time))
 
-	// test 4: Get father of vertices 10, 20 and 30, starting on vertex 1, 2 and 3
-	fmt.Println("\n --- TEST 4 (Fathers) ---")
+	// ---------- TEST 4 TO 7 ARE THE SAME AS THE LIST TESTS ----------
 
-	fmt.Println("BFS")
-	tree := bfsMatrix(adjacency, 1)
-	for _, v := range tree {
-		if v[0] == 10 || v[0] == 20 || v[0] == 30 {
-			fmt.Println("1. father of", v[0], "is", v[1])
-		}
-	}
+	// // test 4: Get father of vertices 10, 20 and 30, starting on vertex 1, 2 and 3
+	// fmt.Println("\n --- TEST 4 (Fathers) ---")
 
-	tree = bfsMatrix(adjacency, 2)
-	for _, v := range tree {
-		if v[0] == 10 || v[0] == 20 || v[0] == 30 {
-			fmt.Println("2. father of", v[0], "is", v[1])
-		}
-	}
+	// fmt.Println("BFS")
+	// tree := bfsMatrix(adjacency, 1)
+	// for _, v := range tree {
+	// 	if v[0] == 10 || v[0] == 20 || v[0] == 30 {
+	// 		fmt.Println("1. father of", v[0], "is", v[1])
+	// 	}
+	// }
 
-	tree = bfsMatrix(adjacency, 3)
-	for _, v := range tree {
-		if v[0] == 10 || v[0] == 20 || v[0] == 30 {
-			fmt.Println("3. father of", v[0], "is", v[1])
-		}
-	}
+	// tree = bfsMatrix(adjacency, 2)
+	// for _, v := range tree {
+	// 	if v[0] == 10 || v[0] == 20 || v[0] == 30 {
+	// 		fmt.Println("2. father of", v[0], "is", v[1])
+	// 	}
+	// }
 
-	fmt.Println("DFS")
-	tree = dfsMatrix(adjacency, 1)
-	for _, v := range tree {
-		if v[0] == 10 || v[0] == 20 || v[0] == 30 {
-			fmt.Println("1. father of", v[0], "is", v[1])
-		}
-	}
+	// tree = bfsMatrix(adjacency, 3)
+	// for _, v := range tree {
+	// 	if v[0] == 10 || v[0] == 20 || v[0] == 30 {
+	// 		fmt.Println("3. father of", v[0], "is", v[1])
+	// 	}
+	// }
 
-	tree = dfsMatrix(adjacency, 2)
-	for _, v := range tree {
-		if v[0] == 10 || v[0] == 20 || v[0] == 30 {
-			fmt.Println("2. father of", v[0], "is", v[1])
-		}
-	}
+	// fmt.Println("DFS")
+	// tree = dfsMatrix(adjacency, 1)
+	// for _, v := range tree {
+	// 	if v[0] == 10 || v[0] == 20 || v[0] == 30 {
+	// 		fmt.Println("1. father of", v[0], "is", v[1])
+	// 	}
+	// }
 
-	tree = dfsMatrix(adjacency, 3)
-	for _, v := range tree {
-		if v[0] == 10 || v[0] == 20 || v[0] == 30 {
-			fmt.Println("3. father of", v[0], "is", v[1])
-		}
-	}
+	// tree = dfsMatrix(adjacency, 2)
+	// for _, v := range tree {
+	// 	if v[0] == 10 || v[0] == 20 || v[0] == 30 {
+	// 		fmt.Println("2. father of", v[0], "is", v[1])
+	// 	}
+	// }
 
-	// test 5: distance between vertex (10, 20) (10, 30), (20, 30)
-	fmt.Println("\n --- TEST 5 (Distances) ---")
+	// tree = dfsMatrix(adjacency, 3)
+	// for _, v := range tree {
+	// 	if v[0] == 10 || v[0] == 20 || v[0] == 30 {
+	// 		fmt.Println("3. father of", v[0], "is", v[1])
+	// 	}
+	// }
 
-	path := findPathMatrix(adjacency, 10, 20)
-	fmt.Println("Distance between 10 and 20: ", len(path)-1)
+	// // test 5: distance between vertex (10, 20) (10, 30), (20, 30)
+	// fmt.Println("\n --- TEST 5 (Distances) ---")
 
-	path = findPathMatrix(adjacency, 10, 30)
-	fmt.Println("Distance between 10 and 30: ", len(path)-1)
+	// path := findPathMatrix(adjacency, 10, 20)
+	// fmt.Println("Distance between 10 and 20: ", len(path)-1)
 
-	path = findPathMatrix(adjacency, 20, 30)
-	fmt.Println("Distance between 20 and 30: ", len(path)-1)
+	// path = findPathMatrix(adjacency, 10, 30)
+	// fmt.Println("Distance between 10 and 30: ", len(path)-1)
 
-	// test 6: Connected components
-	fmt.Println("\n --- TEST 6 (Connected components) ---")
+	// path = findPathMatrix(adjacency, 20, 30)
+	// fmt.Println("Distance between 20 and 30: ", len(path)-1)
 
-	components_time := time.Now()
-	components := findComponentsMatrix(adjacency)
+	// // test 6: Connected components
+	// fmt.Println("\n --- TEST 6 (Connected components) ---")
 
-	fmt.Println("Time finding components:", time.Since(components_time))
-	fmt.Println("Number of components:", len(components))
+	// components_time := time.Now()
+	// components := findComponentsMatrix(adjacency)
 
-	// test 7: Diameter
-	fmt.Println("\n --- TEST 7 (Diameter) ---")
+	// fmt.Println("Time finding components:", time.Since(components_time))
+	// fmt.Println("Number of components:", len(components))
 
-	diameter_time := time.Now()
-	diameter, _, _ := findDiameterMatrix(adjacency)
+	// // test 7: Diameter
+	// fmt.Println("\n --- TEST 7 (Diameter) ---")
 
-	fmt.Println("Time finding diameter (slow):", time.Since(diameter_time))
-	fmt.Println("Diameter:", diameter)
+	// diameter_time := time.Now()
+	// diameter, _, _ := findDiameterMatrix(adjacency)
 
-	diameter_time = time.Now()
-	diameter, _, _ = findDiameterQuickMatrix(adjacency)
+	// fmt.Println("Time finding diameter (slow):", time.Since(diameter_time))
+	// fmt.Println("Diameter:", diameter)
 
-	fmt.Println("Time finding diameter (fast):", time.Since(diameter_time))
-	fmt.Println("Diameter:", diameter)
+	// diameter_time = time.Now()
+	// var component_vertex []uint32
+	// for _, component := range components { // get one vertex of each component
+	// 	component_vertex = append(component_vertex, component[0])
+	// }
+	// diameter, _, _ = findDiameterQuickMatrix(adjacency, component_vertex)
 
-	fmt.Println("\n --- END TESTS ---")
+	// fmt.Println("Time finding diameter (fast):", time.Since(diameter_time))
+	// fmt.Println("Diameter:", diameter)
+
+	fmt.Println("\n --- END MATRIX ---")
 }
