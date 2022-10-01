@@ -9,9 +9,24 @@ import (
 )
 
 func main() {
-	filename := "grafo.txt"
-
 	fmt.Println(" --- START ---")
+
+	run_tests := "0"
+	for run_tests != "1" && run_tests != "2" {
+		fmt.Println("\nRun tests?")
+		fmt.Println("1 - Yes")
+		fmt.Println("2 - No")
+		fmt.Scan(&run_tests)
+	}
+
+	if run_tests == "1" {
+		tests()
+		return
+	}
+
+	var filename string
+	fmt.Print("Insert file name: ")
+	fmt.Scan(&filename)
 
 	start_time := time.Now()
 	lenVertex, degrees, edges := readInitFile(filename) // reads the file and returns the vertexes and edges
@@ -31,7 +46,7 @@ func main() {
 	if representation_id == "1" {
 		components, treeText, pathText, diameterText = adjacencyList(lenVertex, degrees, edges)
 	} else if representation_id == "2" {
-		components, treeText, pathText, diameterText = adjacencyMatrix(lenVertex, degrees, edges)
+		components, treeText, pathText, diameterText = adjacencyMatrix(lenVertex, edges)
 	} else {
 		log.Fatal("Invalid option")
 	}
@@ -111,7 +126,7 @@ func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([]
 	var err error
 	valid := false
 	for !valid {
-		fmt.Println("\nInser the id of the start node:")
+		fmt.Println("Insert the id of the start node:")
 		fmt.Scan(&start_id_str)
 
 		start_id64, err = strconv.ParseUint(start_id_str, 10, 32)
@@ -134,10 +149,8 @@ func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([]
 	}
 
 	treeText := "node\tfather\tlevel"
-	components := [][]uint32{{}} // {{vertex1, vextex2, ...}, ...}
 	for _, node := range tree {
 		treeText += fmt.Sprintf("\n%d\t\t%d\t\t%d", node[0], node[1], node[2])
-		components[0] = append(components[0], node[0])
 	}
 
 	fmt.Println("Time processing search tree:", time.Since(start_time))
@@ -151,44 +164,11 @@ func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([]
 		fmt.Scan(&find_compnents)
 	}
 
+	var components [][]uint32
 	if find_compnents == "1" {
 		components_time := time.Now()
-		visited_vec := make([]*Node, lenVertex)
-		visited_lis := List{nil, nil}
-
-		// fill visited list
-		for i := uint32(1); i < lenVertex; i++ {
-			node := visited_lis.Push(i)
-			visited_vec[i] = node
-		}
-
-		// while there are unvisited nodes
-		for {
-			visited_lis.Display() // log
-
-			//clear visited nodes from list
-			for _, tuple := range tree {
-				visited_lis.Remove(visited_vec[tuple[0]])
-			}
-
-			if visited_lis.head == nil {
-				break
-			}
-
-			// find new component
-			start_id = visited_lis.head.value
-
-			fmt.Println("start_id: ", start_id)
-			tree = bfsList(adjacency, start_id)
-			fmt.Println("tree: ", tree)
-
-			// create components list
-			components = append(components, []uint32{})
-			for _, node := range tree {
-				components[len(components)-1] = append(components[len(components)-1], node[0])
-			}
-			fmt.Println("components: ", components)
-		}
+		components = findComponentsList(adjacency)
+		fmt.Println("components: ", components)
 
 		fmt.Println("Time finding components:", time.Since(components_time))
 	}
@@ -252,7 +232,11 @@ func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([]
 	var diameter, v1, v2 uint32
 	diameter_time := time.Now()
 	if quick_run == "1" {
-		diameter, v1, v2 = findDiameterQuickList(adjacency)
+		var component_vertex []uint32
+		for _, component := range components { // get one vertex of each component
+			component_vertex = append(component_vertex, component[0])
+		}
+		diameter, v1, v2 = findDiameterQuickList(adjacency, component_vertex)
 	} else {
 		diameter, v1, v2 = findDiameterList(adjacency)
 	}
@@ -263,7 +247,7 @@ func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([]
 	return components, treeText, pathText, diameterText
 }
 
-func adjacencyMatrix(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([][]uint32, string, string, string) {
+func adjacencyMatrix(lenVertex uint32, edges [][2]uint32) ([][]uint32, string, string, string) {
 	// ----- CREATE MATRIX -----
 	adjacency := make([][]uint8, lenVertex)
 
@@ -338,41 +322,7 @@ func adjacencyMatrix(lenVertex uint32, neighCount []uint32, edges [][2]uint32) (
 
 	if find_compnents == "1" {
 		components_time := time.Now()
-		visited_vec := make([]*Node, lenVertex)
-		visited_lis := List{nil, nil}
-
-		// fill visited list
-		for i := uint32(1); i < lenVertex; i++ {
-			node := visited_lis.Push(i)
-			visited_vec[i] = node
-		}
-
-		// while there are unvisited nodes
-		for {
-			visited_lis.Display() // log
-
-			//clear visited nodes from list
-			for _, tuple := range tree {
-				visited_lis.Remove(visited_vec[tuple[0]])
-			}
-
-			if visited_lis.head == nil {
-				break
-			}
-
-			// find new component
-			start_id = visited_lis.head.value
-
-			fmt.Println("start_id: ", start_id)
-			tree = bfsMatrix(adjacency, start_id)
-			fmt.Println("tree: ", tree)
-
-			// create components slice
-			components = append(components, []uint32{})
-			for _, node := range tree {
-				components[len(components)-1] = append(components[len(components)-1], node[0])
-			}
-		}
+		components = findComponentsMatrix(adjacency)
 
 		fmt.Println("Time finding components:", time.Since(components_time))
 	}
@@ -427,7 +377,7 @@ func adjacencyMatrix(lenVertex uint32, neighCount []uint32, edges [][2]uint32) (
 	fmt.Println("\nFind diameter:")
 	quick_run := "0"
 	for quick_run != "1" && quick_run != "2" {
-		fmt.Println("\nRun in quick mode (diameter found might be lower than the real):")
+		fmt.Println("Run in quick mode (diameter found might be lower than the real):")
 		fmt.Println("1 - Yes")
 		fmt.Println("2 - No")
 		fmt.Scan(&quick_run)
@@ -436,7 +386,11 @@ func adjacencyMatrix(lenVertex uint32, neighCount []uint32, edges [][2]uint32) (
 	var diameter, v1, v2 uint32
 	diameter_time := time.Now()
 	if quick_run == "1" {
-		diameter, v1, v2 = findDiameterQuickMatrix(adjacency)
+		var component_vertex []uint32
+		for _, component := range components { // get one vertex of each component
+			component_vertex = append(component_vertex, component[0])
+		}
+		diameter, v1, v2 = findDiameterQuickMatrix(adjacency, component_vertex)
 	} else {
 		diameter, v1, v2 = findDiameterMatrix(adjacency)
 	}
