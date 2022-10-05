@@ -113,14 +113,14 @@ func writeOutput(lenVertex uint32, lenEdges uint32, minDegree uint32, maxDegree 
 	output := "Num of vertexes: " + strconv.Itoa(int(lenVertex)) + "\n"
 
 	// ----- NUMBER OF EDGES -----
-	output += "\nNum of edges: " + strconv.Itoa(int(lenEdges)) + "\n"
+	output += "Num of edges: " + strconv.Itoa(int(lenEdges)) + "\n"
 
 	// ----- DEGREES -----
 	output += "\nDEGREES:\n"
-	output += "\nmax degree: " + strconv.Itoa(int(maxDegree)) + "\n"
-	output += "\nmin degree: " + strconv.Itoa(int(minDegree)) + "\n"
-	output += "\naverage degree: " + strconv.FormatFloat(float64(avgDegree), 'f', 2, 32) + "\n"
-	output += "\nmedianDegree degree: " + strconv.FormatFloat(float64(medianDegree), 'f', 2, 32) + "\n"
+	output += "max degree: " + strconv.Itoa(int(maxDegree)) + "\n"
+	output += "min degree: " + strconv.Itoa(int(minDegree)) + "\n"
+	output += "average degree: " + strconv.FormatFloat(float64(avgDegree), 'f', 2, 32) + "\n"
+	output += "medianDegree degree: " + strconv.FormatFloat(float64(medianDegree), 'f', 2, 32) + "\n"
 
 	// ----- COMPONENTS -----
 	sort.Slice(components, func(i, j int) bool {
@@ -129,7 +129,7 @@ func writeOutput(lenVertex uint32, lenEdges uint32, minDegree uint32, maxDegree 
 
 	output += "\nCOMPONENTS:\n"
 	output += "Num of components: " + strconv.Itoa(len(components)) + "\n\n"
-	output += "Comp. length -> Vertexes list" + strconv.Itoa(len(components)) + "\n"
+	output += "Comp. length -> Vertexes list \n"
 
 	for _, component := range components {
 		output += strconv.Itoa(len(component)) + " ->"

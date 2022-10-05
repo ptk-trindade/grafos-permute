@@ -1,7 +1,6 @@
 ﻿package main
 
 import (
-	"fmt"
 	"sort"
 )
 
@@ -174,7 +173,6 @@ func findDiameterQuickList(adjacency [][]uint32, component_vertex []uint32) (uin
 
 		tree = bfsList(adjacency, v1) // run bfs from the most distant vertex
 		lastVertex := tree[len(tree)-1]
-		fmt.Print(lastVertex, "\t")
 		v2 := lastVertex[0]
 		distance := lastVertex[2]
 

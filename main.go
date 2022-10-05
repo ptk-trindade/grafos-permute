@@ -168,7 +168,6 @@ func adjacencyList(lenVertex uint32, neighCount []uint32, edges [][2]uint32) ([]
 	if find_compnents == "1" {
 		components_time := time.Now()
 		components = findComponentsList(adjacency)
-		fmt.Println("components: ", components)
 
 		fmt.Println("Time finding components:", time.Since(components_time))
 	}
