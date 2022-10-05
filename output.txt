@@ -1,0 +1,13 @@
+Num of vertexes: 1000022
+Num of edges: 17666652
+
+DEGREES:
+max degree: 87
+min degree: 1
+average degree: 35.33
+medianDegree degree: 37.00
+
+COMPONENTS:
+Num of components: 0
+
+Comp. length -> Vertexes list 

@@ -1,0 +1,2 @@
+Diameter: 9
+From vertex 1026 to 598
