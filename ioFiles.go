@@ -11,6 +11,12 @@ import (
 	"strings"
 )
 
+type Edge struct {
+	vertex1 uint32
+	vertex2 uint32
+	weight  float64
+}
+
 // Reads a txt returning a slice of strings (separated by new line)
 func ReadFile(filename string) []string {
 	file, err := os.Open(filename)
@@ -65,10 +71,10 @@ filename: name of the file to be read
 --- out:
 lenVertex: number of vertexes
 neighCount: number of neighbors of each vertex
-edges: slice of edges
+edges: slice of edges (struct Edge)
 */
-func readInitFile(filename string) (uint32, []uint32, [][2]uint32) {
-	reg := regexp.MustCompile(`(?P<node1>\d+) (?P<node2>\d+)`)
+func readInitFile(filename string) (uint32, []uint32, []Edge) {
+	reg := regexp.MustCompile(`(?P<node1>\d+) (?P<node2>\d+) (?P<weight>-?\d+\.?\d*)`)
 	lines := ReadFile(filename)
 
 	// get number of vertexes
@@ -82,7 +88,7 @@ func readInitFile(filename string) (uint32, []uint32, [][2]uint32) {
 
 	fmt.Println("get edges")
 	// get edges
-	var edges [][2]uint32                               // edges (order doesn't matter)
+	var edges []Edge                                    // edges (order doesn't matter)
 	var neighCount []uint32 = make([]uint32, lenVertex) // number of neighbors for each vertex
 	for i := 1; i < len(lines); i++ {
 		trimmed := strings.Trim(lines[i], " ")
@@ -95,16 +101,24 @@ func readInitFile(filename string) (uint32, []uint32, [][2]uint32) {
 
 		node1id64, _ := strconv.ParseUint(edgeSlice[1], 10, 32)
 		node2id64, _ := strconv.ParseUint(edgeSlice[2], 10, 32)
-		// weight, _ := strconv.ParseFloat(edgeSlice[3], 32)
+		weight, _ := strconv.ParseFloat(edgeSlice[3], 32)
 
 		neighCount[node1id64]++
 		neighCount[node2id64]++
-		edges = append(edges, [2]uint32{uint32(node1id64), uint32(node2id64)}) // add edge to slice
+		edges = append(edges, Edge{uint32(node1id64), uint32(node2id64), weight}) // add edge to slice
 	}
 
 	fmt.Println("return readInitFile")
 	return lenVertex, neighCount, edges
 
+}
+
+func tree2text(tree []*TreeNode) string {
+	var text string
+	for i := 0; i < len(tree); i++ {
+		text += fmt.Sprint(tree[i].id) + "\t\t" + fmt.Sprint(tree[i].father) + "\t\t" + fmt.Sprintf("%.2f", tree[i].cost) + "\n"
+	}
+	return text
 }
 
 // write the generic outputs
@@ -141,5 +155,3 @@ func writeOutput(lenVertex uint32, lenEdges uint32, minDegree uint32, maxDegree 
 
 	WriteFile("output.txt", output)
 }
-
-// func writeTree(treeTable []string) {}

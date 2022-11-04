@@ -1,0 +1,15 @@
+Path from 10 to 20 (cost: 1.52, edges: 4):
+[10 28 621 27 20]
+
+Path from 10 to 30 (cost: 1.48, edges: 8):
+[10 28 621 200 32 959 859 738 30]
+
+Path from 10 to 40 (cost: 1.52, edges: 5):
+[10 28 621 116 51 40]
+
+Path from 10 to 50 (cost: 1.39, edges: 9):
+[10 28 203 666 937 113 64 422 296 50]
+
+Path from 10 to 60 (cost: 1.39, edges: 8):
+[10 597 172 311 123 89 963 215 60]
+

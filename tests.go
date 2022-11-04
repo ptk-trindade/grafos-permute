@@ -2,342 +2,70 @@
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"time"
 )
 
-func tests() {
-	fmt.Print("1.Matrix\n2.List\ninsert: ")
-	var mat_list string
-	fmt.Scan(&mat_list)
+func tests(adjacency [][]*Neighbor, lenVertex uint32, edges []Edge, negative_edge bool) {
 
-	fmt.Print("graph number (2 to 5)\ninsert: ")
-	var graph_num string
-	fmt.Scan(&graph_num)
+	// ------ START TESTS ------
+	// test 1: Calculate the distance between two nodes
+	fmt.Println("\n --- TEST 1 (Distances) ---")
+	if !negative_edge {
+		start_id := uint32(10)
+		end_id := []uint32{20, 30, 40, 50, 60} // ADD OS 0 DPS
 
-	filename := "grafo_" + graph_num + ".txt"
-	if mat_list == "1" {
-		testsMatrix(filename)
+		var paths_string string
+		distance_time := time.Now()
+		for i := 0; i < len(end_id); i++ {
+			tree := dijkstraHeap(adjacency, start_id, end_id[i])
+			path, cost := findPath(tree, start_id, end_id[i])
+			fmt.Println("Distance from", start_id, "to", end_id[i], ":", cost)
+			paths_string += "Path from " + fmt.Sprint(start_id) + " to " + fmt.Sprint(end_id[i]) + " (cost: " + fmt.Sprintf("%.2f", cost) + ", edges: " + fmt.Sprint(len(path)-1) + "):\n" + fmt.Sprint(path) + "\n\n"
+		}
+		fmt.Println("Time calculating distances:", time.Since(distance_time))
 
-	} else if mat_list == "2" {
-		testsList(filename)
+		fmt.Println("writing paths to file")
+		WriteFile("paths.txt", paths_string)
 
+		// test 2: Running Dijkstra's k times
+		fmt.Println("\n --- TEST 2 (Dijkstra) ---")
+		k := 100
+
+		// create a slice of k random vertexes
+		var randomVertexes []uint32 = make([]uint32, k)
+		for i := 0; i < k; i++ {
+			randomVertexes[i] = uint32(rand.Intn(int(lenVertex)))
+		}
+
+		fmt.Println("Run dijsktra", k, "times")
+		start_heap := time.Now()
+		for i := 0; i < k; i++ {
+			dijkstraHeap(adjacency, randomVertexes[i], 0)
+		}
+		fmt.Println("Time dijkstra heap:", time.Since(start_heap))
+
+		start_list := time.Now()
+		for i := 0; i < k; i++ {
+			dijkstraList(adjacency, randomVertexes[i], 0)
+		}
+		fmt.Println("Time dijkstra list:", time.Since(start_list))
 	} else {
-		log.Fatal("invalid input")
-
+		fmt.Println("Graph contains negative edges, skipping tests 1 and 2")
 	}
 
-	fmt.Println(" --- end --- ")
-	fmt.Scan(&graph_num)
-}
+	// test 3: Finding MST
+	fmt.Println("\n --- TEST 3 (MST) ---")
+	start_mst := time.Now()
+	mst, cost := primHeap(adjacency)
+	fmt.Println("Time MST:", time.Since(start_mst))
 
-func testsList(filename string) {
-	fmt.Println(" --- START LIST---")
+	// transform the MST in a string
+	mst_string := "(total cost: " + fmt.Sprintf("%.2f", cost) + ")\nid\t\tfather\t\tcost\n"
+	mst_string += tree2text(mst)
 
-	// fmt.Print("Insert file name: ")
-	// fmt.Scan(&filename)
+	WriteFile("mst.txt", mst_string)
 
-	start_time := time.Now()
-	lenVertex, neighCount, edges := readInitFile(filename) // reads the file and returns the vertexes and edges
-	fmt.Println("Time reading files:", time.Since(start_time))
+	fmt.Println(" --- END --- ")
 
-	adjacency := make([][]uint32, lenVertex)
-
-	log.Println("Allocating slices")
-	// allocate memory for the slices (not crucial but decreases memory allocation)
-	for i := uint32(0); i < lenVertex; i++ {
-		adjacency[i] = make([]uint32, 0, neighCount[i])
-	}
-
-	log.Println("len flling edges: ", len(edges))
-	// fill the slices
-	for i := uint32(0); i < uint32(len(edges)); i++ {
-		adjacency[edges[i][0]] = append(adjacency[edges[i][0]], edges[i][1])
-		adjacency[edges[i][1]] = append(adjacency[edges[i][1]], edges[i][0])
-	}
-
-	fmt.Print("Check memory usage (adjacency list): ")
-	fmt.Scan(&filename)
-
-	// ------ START TESTS ------
-	// test 1: see allocated space
-	fmt.Println("\n --- TEST 1 (SPACE) ---")
-
-	// test 2: run 1000 BFS
-	fmt.Println("\n --- TEST 2 (BFS) ---")
-	// create a slice of 1000 random vertexes
-	var randomVertexes []uint32 = make([]uint32, 1000)
-	for i := 0; i < 1000; i++ {
-		randomVertexes[i] = uint32(rand.Intn(int(lenVertex)))
-	}
-
-	// run 1000 BFS
-	start_time = time.Now()
-	for i := 0; i < 1000; i++ {
-		bfsList(adjacency, randomVertexes[i])
-	}
-	fmt.Println("Time 1000 BFS:", time.Since(start_time))
-
-	// test 3: run 1000 DFS
-	fmt.Println("\n --- TEST 3 (DFS) ---")
-	start_time = time.Now()
-	for i := 0; i < 1000; i++ {
-		dfsList(adjacency, randomVertexes[i])
-	}
-	fmt.Println("Time 1000 DFS:", time.Since(start_time))
-
-	// test 4: Get father of vertices 10, 20 and 30, starting on vertex 1, 2 and 3
-	fmt.Println("\n --- TEST 4 (Fathers) ---")
-
-	fmt.Println("BFS")
-	tree := bfsList(adjacency, 1)
-	for _, v := range tree {
-		if v[0] == 10 || v[0] == 20 || v[0] == 30 {
-			fmt.Println("1. father of", v[0], "is", v[1])
-		}
-	}
-
-	tree = bfsList(adjacency, 2)
-	for _, v := range tree {
-		if v[0] == 10 || v[0] == 20 || v[0] == 30 {
-			fmt.Println("2. father of", v[0], "is", v[1])
-		}
-	}
-
-	tree = bfsList(adjacency, 3)
-	for _, v := range tree {
-		if v[0] == 10 || v[0] == 20 || v[0] == 30 {
-			fmt.Println("3. father of", v[0], "is", v[1])
-		}
-	}
-
-	fmt.Println("DFS")
-	tree = dfsList(adjacency, 1)
-	for _, v := range tree {
-		if v[0] == 10 || v[0] == 20 || v[0] == 30 {
-			fmt.Println("1. father of", v[0], "is", v[1])
-		}
-	}
-
-	tree = dfsList(adjacency, 2)
-	for _, v := range tree {
-		if v[0] == 10 || v[0] == 20 || v[0] == 30 {
-			fmt.Println("2. father of", v[0], "is", v[1])
-		}
-	}
-
-	tree = dfsList(adjacency, 3)
-	for _, v := range tree {
-		if v[0] == 10 || v[0] == 20 || v[0] == 30 {
-			fmt.Println("3. father of", v[0], "is", v[1])
-		}
-	}
-
-	// test 5: distance between vertex (10, 20) (10, 30), (20, 30)
-	fmt.Println("\n --- TEST 5 (Distances) ---")
-	// CHANGE THIS!!
-	path := findPathList(adjacency, 1, 2)
-	fmt.Println("Distance between 10 and 20: ", len(path)-1)
-
-	path = findPathList(adjacency, 1, 3)
-	fmt.Println("Distance between 10 and 30: ", len(path)-1)
-
-	path = findPathList(adjacency, 2, 3)
-	fmt.Println("Distance between 20 and 30: ", len(path)-1)
-
-	// test 6: Connected components
-	fmt.Println("\n --- TEST 6 (Connected components) ---")
-
-	components_time := time.Now()
-	components := findComponentsList(adjacency)
-
-	fmt.Println("Time finding components:", time.Since(components_time))
-	fmt.Println("Number of components:", len(components))
-
-	bigger := 0
-	smaller := int(lenVertex)
-	for _, v := range components {
-		size := len(v)
-		if size > bigger {
-			bigger = size
-		}
-		if size < smaller {
-			smaller = size
-		}
-	}
-
-	fmt.Println("Bigger components:", bigger)
-	fmt.Println("Smaller components:", smaller)
-
-	// test 7: Diameter
-	fmt.Println("\n --- TEST 7 (Diameter) ---")
-	var diameter_time time.Time
-	var diameter uint32
-
-	// fast
-	diameter_time = time.Now()
-	var component_vertex []uint32
-	for _, component := range components { // get one vertex of each component
-		component_vertex = append(component_vertex, component[0])
-	}
-	diameter, _, _ = findDiameterQuickList(adjacency, component_vertex)
-
-	fmt.Println("Time finding diameter (fast):", time.Since(diameter_time))
-	fmt.Println("Diameter:", diameter)
-
-	// slow
-	diameter_time = time.Now()
-	diameter, _, _ = findDiameterList(adjacency)
-
-	fmt.Println("Time finding diameter (slow):", time.Since(diameter_time))
-	fmt.Println("Diameter:", diameter)
-
-	fmt.Println("\n --- END LIST ---")
-}
-
-func testsMatrix(filename string) {
-	fmt.Println(" --- START MATRIX---")
-
-	// fmt.Print("Insert file name: ")
-	// fmt.Scan(&filename)
-
-	start_time := time.Now()
-	lenVertex, _, edges := readInitFile(filename) // reads the file and returns the vertexes and edges
-	fmt.Println("Time reading files:", time.Since(start_time))
-
-	// ----- CREATE MATRIX -----
-	adjacency := make([][]uint8, lenVertex)
-
-	// allocate memory for the slices (not crucial decreases memory allocation)
-	for i := uint32(0); i < lenVertex; i++ {
-		adjacency[i] = make([]uint8, lenVertex)
-	}
-
-	log.Println("len edges: ", len(edges))
-	// fill the slices
-	for i := uint32(0); i < uint32(len(edges)); i++ {
-		adjacency[edges[i][0]][edges[i][1]] = 1
-		adjacency[edges[i][1]][edges[i][0]] = 1
-	}
-
-	fmt.Print("Check memory usage (adjacency list): ")
-	fmt.Scan(&filename)
-	// ------ START TESTS ------
-	// test 1: see allocated space
-	fmt.Println("\n --- TEST 1 (SPACE) ---")
-
-	// test 2: run 1000 BFS
-	fmt.Println("\n --- TEST 2 (BFS) ---")
-	// create a slice of 1000 random vertexes
-	var randomVertexes []uint32 = make([]uint32, 1000)
-	for i := 0; i < 1000; i++ {
-		randomVertexes[i] = uint32(rand.Intn(int(lenVertex)))
-	}
-
-	// run 1000 BFS
-	start_time = time.Now()
-	for i := 0; i < 1000; i++ {
-		bfsMatrix(adjacency, randomVertexes[i])
-	}
-	fmt.Println("Time 1000 BFS:", time.Since(start_time))
-
-	// test 3: run 1000 DFS
-	fmt.Println("\n --- TEST 3 (DFS) ---")
-	start_time = time.Now()
-	for i := 0; i < 1000; i++ {
-		dfsMatrix(adjacency, randomVertexes[i])
-	}
-	fmt.Println("Time 1000 DFS:", time.Since(start_time))
-
-	// ---------- TEST 4 TO 7 ARE THE SAME AS THE LIST TESTS ----------
-
-	// // test 4: Get father of vertices 10, 20 and 30, starting on vertex 1, 2 and 3
-	// fmt.Println("\n --- TEST 4 (Fathers) ---")
-
-	// fmt.Println("BFS")
-	// tree := bfsMatrix(adjacency, 1)
-	// for _, v := range tree {
-	// 	if v[0] == 10 || v[0] == 20 || v[0] == 30 {
-	// 		fmt.Println("1. father of", v[0], "is", v[1])
-	// 	}
-	// }
-
-	// tree = bfsMatrix(adjacency, 2)
-	// for _, v := range tree {
-	// 	if v[0] == 10 || v[0] == 20 || v[0] == 30 {
-	// 		fmt.Println("2. father of", v[0], "is", v[1])
-	// 	}
-	// }
-
-	// tree = bfsMatrix(adjacency, 3)
-	// for _, v := range tree {
-	// 	if v[0] == 10 || v[0] == 20 || v[0] == 30 {
-	// 		fmt.Println("3. father of", v[0], "is", v[1])
-	// 	}
-	// }
-
-	// fmt.Println("DFS")
-	// tree = dfsMatrix(adjacency, 1)
-	// for _, v := range tree {
-	// 	if v[0] == 10 || v[0] == 20 || v[0] == 30 {
-	// 		fmt.Println("1. father of", v[0], "is", v[1])
-	// 	}
-	// }
-
-	// tree = dfsMatrix(adjacency, 2)
-	// for _, v := range tree {
-	// 	if v[0] == 10 || v[0] == 20 || v[0] == 30 {
-	// 		fmt.Println("2. father of", v[0], "is", v[1])
-	// 	}
-	// }
-
-	// tree = dfsMatrix(adjacency, 3)
-	// for _, v := range tree {
-	// 	if v[0] == 10 || v[0] == 20 || v[0] == 30 {
-	// 		fmt.Println("3. father of", v[0], "is", v[1])
-	// 	}
-	// }
-
-	// // test 5: distance between vertex (10, 20) (10, 30), (20, 30)
-	// fmt.Println("\n --- TEST 5 (Distances) ---")
-
-	// path := findPathMatrix(adjacency, 10, 20)
-	// fmt.Println("Distance between 10 and 20: ", len(path)-1)
-
-	// path = findPathMatrix(adjacency, 10, 30)
-	// fmt.Println("Distance between 10 and 30: ", len(path)-1)
-
-	// path = findPathMatrix(adjacency, 20, 30)
-	// fmt.Println("Distance between 20 and 30: ", len(path)-1)
-
-	// // test 6: Connected components
-	// fmt.Println("\n --- TEST 6 (Connected components) ---")
-
-	// components_time := time.Now()
-	// components := findComponentsMatrix(adjacency)
-
-	// fmt.Println("Time finding components:", time.Since(components_time))
-	// fmt.Println("Number of components:", len(components))
-
-	// // test 7: Diameter
-	// fmt.Println("\n --- TEST 7 (Diameter) ---")
-
-	// diameter_time := time.Now()
-	// diameter, _, _ := findDiameterMatrix(adjacency)
-
-	// fmt.Println("Time finding diameter (slow):", time.Since(diameter_time))
-	// fmt.Println("Diameter:", diameter)
-
-	// diameter_time = time.Now()
-	// var component_vertex []uint32
-	// for _, component := range components { // get one vertex of each component
-	// 	component_vertex = append(component_vertex, component[0])
-	// }
-	// diameter, _, _ = findDiameterQuickMatrix(adjacency, component_vertex)
-
-	// fmt.Println("Time finding diameter (fast):", time.Since(diameter_time))
-	// fmt.Println("Diameter:", diameter)
-
-	fmt.Println("\n --- END MATRIX ---")
 }

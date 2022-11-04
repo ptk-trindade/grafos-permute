@@ -1,2 +1,0 @@
-Diameter: 31
-From vertex 45839 to 9903

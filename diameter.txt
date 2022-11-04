@@ -1,2 +1,0 @@
-Diameter: 102
-From vertex 234810 to 293991

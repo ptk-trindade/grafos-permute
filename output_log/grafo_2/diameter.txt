@@ -1,2 +1,0 @@
-Diameter: 5
-From vertex 339 to 718
