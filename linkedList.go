@@ -96,20 +96,7 @@ func (L *List) Update(vertex_id uint32, father uint32, cost float64) {
 
 		L.vertexes[vertex_id] = updated_node
 
-		// // if the list is empty
-		// if L.tail == nil {
-		// 	fmt.Println("Empty:", L.head, L.tail)
-		// 	L.head = updated_node
-		// 	L.tail = updated_node
-		// 	fmt.Println("Filled:", L.head, L.tail)
-		// 	return
-		// }
-
 		L.insertAfter(L.tail, updated_node)
-		// // insert at the end
-		// L.tail.next = updated_node
-		// updated_node.prev = L.tail
-		// L.tail = updated_node
 
 	} else { // if the node is already in the list
 
