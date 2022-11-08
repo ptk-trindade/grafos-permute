@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"bytes"
 )
 
 type Edge struct {
@@ -114,11 +115,12 @@ func readInitFile(filename string) (uint32, []uint32, []Edge) {
 }
 
 func tree2text(tree []*TreeNode) string {
-	var text string
+	var text_bytes bytes.Buffer
 	for i := 0; i < len(tree); i++ {
-		text += fmt.Sprint(tree[i].id) + "\t\t" + fmt.Sprint(tree[i].father) + "\t\t" + fmt.Sprintf("%.2f", tree[i].cost) + "\n"
+		line := fmt.Sprint(tree[i].id) + "\t\t" + fmt.Sprint(tree[i].father) + "\t\t" + fmt.Sprintf("%.2f", tree[i].cost) + "\n"
+		text_bytes.WriteString(line)
 	}
-	return text
+	return text_bytes.String()
 }
 
 // write the generic outputs
