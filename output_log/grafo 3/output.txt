@@ -1,0 +1,14 @@
+Num of vertexes: 100000
+Num of edges: 2599967
+
+DEGREES:
+max degree: 83
+min degree: 25
+average degree: 52.00
+medianDegree degree: 52.00
+
+WEIGHTS:
+max weight: 10.00
+min weight: 0.00
+average weight: 4.91
+median weight: 4.82
