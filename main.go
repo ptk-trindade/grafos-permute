@@ -137,24 +137,26 @@ func main() {
 		end64, error = strconv.ParseUint(end_str, 10, 32)
 	}
 
-	// DIJKSTRA BINARY HEAP
-	dijkstraTime := time.Now()
-	tree_heap := dijkstraHeap(adjacency, uint32(start64), uint32(end64))
-	fmt.Println("Time dijkstra Heap:", time.Since(dijkstraTime))
+	if !negative_edge {
+		// DIJKSTRA BINARY HEAP
+		dijkstraTime := time.Now()
+		tree_heap := dijkstraHeap(adjacency, uint32(start64), uint32(end64))
+		fmt.Println("Time dijkstra Heap:", time.Since(dijkstraTime))
 
-	heap_string := "id\t\tfather\t\tcost\n"
-	heap_string += tree2text(tree_heap)
-	WriteFile("dijkstraHeap.txt", heap_string)
+		heap_string := "id\t\tfather\t\tcost\n"
+		heap_string += tree2text(tree_heap)
+		WriteFile("dijkstraHeap.txt", heap_string)
 
-	// DIJKSTRA LIST
-	dijkstraTime = time.Now()
-	tree_list := dijkstraList(adjacency, uint32(start64), uint32(end64))
-	fmt.Println("Time dijkstra List:", time.Since(dijkstraTime))
+		// DIJKSTRA LIST
+		dijkstraTime = time.Now()
+		tree_list := dijkstraList(adjacency, uint32(start64), uint32(end64))
+		fmt.Println("Time dijkstra List:", time.Since(dijkstraTime))
 
-	list_string := "id\t\tfather\t\tcost\n"
-	list_string += tree2text(tree_list)
-	WriteFile("dijkstraList.txt", list_string)
-
+		list_string := "id\t\tfather\t\tcost\n"
+		list_string += tree2text(tree_list)
+		WriteFile("dijkstraList.txt", list_string)
+	}
+	
 	// MST
 	start_mst := time.Now()
 	mst, cost := primHeap(adjacency)
@@ -162,6 +164,7 @@ func main() {
 	mst_string := "(total cost: " + fmt.Sprintf("%.2f", cost) + ")\nid\t\tfather\t\tcost\n"
 	mst_string += tree2text(mst)
 
+	fmt.Println("mst cost: ", cost)
 	WriteFile("mst.txt", mst_string)
 
 	fmt.Println("Time writing files:", time.Since(write_time))
