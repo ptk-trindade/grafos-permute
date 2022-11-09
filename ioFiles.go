@@ -2,14 +2,13 @@
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"log"
 	"os"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
-	"bytes"
 )
 
 type Edge struct {
@@ -109,7 +108,6 @@ func readInitFile(filename string) (uint32, []uint32, []Edge) {
 		edges = append(edges, Edge{uint32(node1id64), uint32(node2id64), weight}) // add edge to slice
 	}
 
-	fmt.Println("return readInitFile")
 	return lenVertex, neighCount, edges
 
 }
@@ -121,39 +119,4 @@ func tree2text(tree []*TreeNode) string {
 		text_bytes.WriteString(line)
 	}
 	return text_bytes.String()
-}
-
-// write the generic outputs
-func writeOutput(lenVertex uint32, lenEdges uint32, minDegree uint32, maxDegree uint32, avgDegree float32, medianDegree float32, components [][]uint32) {
-	// ----- NUMBER OF VERTEX -----
-	output := "Num of vertexes: " + strconv.Itoa(int(lenVertex)) + "\n"
-
-	// ----- NUMBER OF EDGES -----
-	output += "Num of edges: " + strconv.Itoa(int(lenEdges)) + "\n"
-
-	// ----- DEGREES -----
-	output += "\nDEGREES:\n"
-	output += "max degree: " + strconv.Itoa(int(maxDegree)) + "\n"
-	output += "min degree: " + strconv.Itoa(int(minDegree)) + "\n"
-	output += "average degree: " + strconv.FormatFloat(float64(avgDegree), 'f', 2, 32) + "\n"
-	output += "medianDegree degree: " + strconv.FormatFloat(float64(medianDegree), 'f', 2, 32) + "\n"
-
-	// ----- COMPONENTS -----
-	sort.Slice(components, func(i, j int) bool {
-		return len(components[i]) > len(components[j])
-	})
-
-	output += "\nCOMPONENTS:\n"
-	output += "Num of components: " + strconv.Itoa(len(components)) + "\n\n"
-	output += "Comp. length -> Vertexes list \n"
-
-	for _, component := range components {
-		output += strconv.Itoa(len(component)) + " ->"
-		for _, node := range component {
-			output += " " + strconv.Itoa(int(node))
-		}
-		output += "\n"
-	}
-
-	WriteFile("output.txt", output)
 }

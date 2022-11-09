@@ -43,13 +43,13 @@ func tests(adjacency [][]*Neighbor, lenVertex uint32, edges []Edge, negative_edg
 		for i := 0; i < k; i++ {
 			dijkstraHeap(adjacency, randomVertexes[i], 0)
 		}
-		fmt.Println("Time dijkstra heap:", time.Since(start_heap))
+		fmt.Println("\nTime dijkstra heap:", time.Since(start_heap))
 
 		start_list := time.Now()
 		for i := 0; i < k; i++ {
 			dijkstraList(adjacency, randomVertexes[i], 0)
 		}
-		fmt.Println("Time dijkstra list:", time.Since(start_list))
+		fmt.Println("\nTime dijkstra list:", time.Since(start_list))
 	} else {
 		fmt.Println("Graph contains negative edges, skipping tests 1 and 2")
 	}
