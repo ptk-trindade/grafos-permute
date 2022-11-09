@@ -1,4 +1,4 @@
-*.exe
+output_log/grafo 5/*
 grafo_*.txt
 ignore/*
 trab_*/*
