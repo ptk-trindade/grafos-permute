@@ -12,15 +12,9 @@ import (
 func main() {
 	fmt.Println(" --- START ---")
 
-	fmt.Print("graph number (1 to 5)\ninsert: ")
-	var graph_num string
-	fmt.Scan(&graph_num)
-
-	filename := "grafo_W_" + graph_num + "_1.txt"
-	// filename = "graph_1.txt"
-	fmt.Println("filename:", filename)
-	// fmt.Print("Insert file name: ")
-	// fmt.Scan(&filename)
+	fmt.Print("Insert file name (with extension) \nfilename: ")
+	var filename string
+	fmt.Scan(&filename)
 
 	start_time := time.Now()
 	lenVertex, degrees, edges := readInitFile(filename) // reads the file and returns the vertexes and edges
@@ -47,7 +41,7 @@ func main() {
 
 	run_tests := "0"
 	for run_tests != "1" && run_tests != "2" {
-		fmt.Println("\nRun tests?")
+		fmt.Println("\nRun all tests?")
 		fmt.Println("1 - Yes")
 		fmt.Println("2 - No")
 		fmt.Scan(&run_tests)
@@ -118,57 +112,123 @@ func main() {
 
 	WriteFile("output.txt", output)
 
-	fmt.Println("Time writing files:", time.Since(write_time))
+	fmt.Println("Time writing output.txt file:", time.Since(write_time))
 	var start_str string
 	var end_str string
 	var start64 uint64
 	var end64 uint64
 	var error error = errors.New("no value assigned")
-	for error != nil {
-		fmt.Println("\nPick a starting vertex")
-		fmt.Scan(&start_str)
-		start64, error = strconv.ParseUint(start_str, 10, 32)
-	}
 
-	error = errors.New("no value assigned")
-	for error != nil {
-		fmt.Println("\nPick an ending vertex")
-		fmt.Scan(&end_str)
-		end64, error = strconv.ParseUint(end_str, 10, 32)
-	}
-
+	var run string = "0"
 	if !negative_edge {
-		// DIJKSTRA BINARY HEAP
-		dijkstraTime := time.Now()
-		tree_heap := dijkstraHeap(adjacency, uint32(start64), uint32(end64))
-		fmt.Println("Time dijkstra Heap:", time.Since(dijkstraTime))
+		// ----- DIJKSTRA BINARY HEAP -----
+		for run != "1" && run != "2" {
+			fmt.Println("\nRun Dijkstra using binary heap?")
+			fmt.Println("1 - Yes")
+			fmt.Println("2 - No")
+			fmt.Scan(&run)
+		}
 
-		heap_string := "id\t\tfather\t\tcost\n"
-		heap_string += tree2text(tree_heap)
-		WriteFile("dijkstraHeap.txt", heap_string)
+		if run == "1" {
+			for error != nil {
+				fmt.Println("\nPick a starting vertex")
+				fmt.Scan(&start_str)
+				start64, error = strconv.ParseUint(start_str, 10, 32)
+			}
 
-		// DIJKSTRA LIST
-		dijkstraTime = time.Now()
-		tree_list := dijkstraList(adjacency, uint32(start64), uint32(end64))
-		fmt.Println("Time dijkstra List:", time.Since(dijkstraTime))
+			dijkstraTime := time.Now()
+			tree_heap := dijkstraHeap(adjacency, uint32(start64), uint32(0))
+			fmt.Println("Time dijkstra Heap:", time.Since(dijkstraTime))
 
-		list_string := "id\t\tfather\t\tcost\n"
-		list_string += tree2text(tree_list)
-		WriteFile("dijkstraList.txt", list_string)
+			heap_string := "id\t\tfather\t\tcost\n"
+			heap_string += tree2text(tree_heap)
+			WriteFile("dijkstraHeap.txt", heap_string)
+		}
+
+		// ----- DIJKSTRA LINKED LIST -----
+		run = "0"
+		for run != "1" && run != "2" {
+			fmt.Println("\nRun Dijkstra using Linked List?")
+			fmt.Println("1 - Yes")
+			fmt.Println("2 - No")
+			fmt.Scan(&run)
+		}
+
+		if run == "1" {
+			error = errors.New("no value assigned")
+			for error != nil {
+				fmt.Println("\nPick a starting vertex")
+				fmt.Scan(&start_str)
+				start64, error = strconv.ParseUint(start_str, 10, 32)
+			}
+
+			dijkstraTime := time.Now()
+			tree_list := dijkstraList(adjacency, uint32(start64), uint32(0))
+			fmt.Println("Time dijkstra List:", time.Since(dijkstraTime))
+
+			list_string := "id\t\tfather\t\tcost\n"
+			list_string += tree2text(tree_list)
+			WriteFile("dijkstraList.txt", list_string)
+		}
+
+		// ----- Find shortest path (using heap dijkstra) -----
+		run = "0"
+		for run != "1" && run != "2" {
+			fmt.Println("\nFind shortest path?")
+			fmt.Println("1 - Yes")
+			fmt.Println("2 - No")
+			fmt.Scan(&run)
+		}
+
+		if run == "1" {
+			error = errors.New("no value assigned")
+			for error != nil {
+				fmt.Println("\nPick a starting vertex")
+				fmt.Scan(&start_str)
+				start64, error = strconv.ParseUint(start_str, 10, 32)
+			}
+
+			error = errors.New("no value assigned")
+			for error != nil {
+				fmt.Println("\nPick a ending vertex")
+				fmt.Scan(&end_str)
+				end64, error = strconv.ParseUint(end_str, 10, 32)
+			}
+
+			path_time := time.Now()
+			tree := dijkstraHeap(adjacency, uint32(start64), uint32(end64))
+			path, cost := findPath(tree, uint32(start64), uint32(end64))
+			fmt.Println("Time finding path:", time.Since(path_time))
+
+			fmt.Println("Distance from", uint32(start64), "to", uint32(end64), ":", cost)
+			path_string := "Path from " + fmt.Sprint(uint32(start64)) + " to " + fmt.Sprint(uint32(end64)) + " (cost: " + fmt.Sprintf("%.2f", cost) + ", edges: " + fmt.Sprint(len(path)-1) + "):\n" + fmt.Sprint(path) + "\n\n"
+			WriteFile("path.txt", path_string)
+
+		}
+	} else {
+		fmt.Println("\nNegative edge found, Dijkstra cannot be run")
 	}
-	
+
 	// MST
-	start_mst := time.Now()
-	mst, cost := primHeap(adjacency)
-	fmt.Println("Time MST:", time.Since(start_mst))
-	mst_string := "(total cost: " + fmt.Sprintf("%.2f", cost) + ")\nid\t\tfather\t\tcost\n"
-	mst_string += tree2text(mst)
+	run = "0"
+	for run != "1" && run != "2" {
+		fmt.Println("\nFind MST?")
+		fmt.Println("1 - Yes")
+		fmt.Println("2 - No")
+		fmt.Scan(&run)
+	}
 
-	fmt.Println("mst cost: ", cost)
-	WriteFile("mst.txt", mst_string)
+	if run == "1" {
+		start_mst := time.Now()
+		mst, cost := primHeap(adjacency)
+		fmt.Println("Time MST:", time.Since(start_mst))
+		mst_string := "(total cost: " + fmt.Sprintf("%.2f", cost) + ")\nid\t\tfather\t\tcost\n"
+		mst_string += tree2text(mst)
 
-	fmt.Println("Time writing files:", time.Since(write_time))
+		fmt.Println("mst cost: ", cost)
+		WriteFile("mst.txt", mst_string)
+	}
+
 	fmt.Println("Time in execution:", time.Since(start_time))
 	fmt.Println(" --- END ---")
-	fmt.Println("Enter anything to exit")
 }
