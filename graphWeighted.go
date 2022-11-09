@@ -14,13 +14,14 @@ type TreeNode struct {
 }
 
 /*
-Find the shortest path from root to end in a given tree using Dijkstra algorithm
+Find the shortest path from root to end
+using Dijkstra algorithm and a list
 --- in:
 adjacency: the adjacency list of the graph
 root: the root of the tree
 end: the end of the path (the goal vertex) / if 0 explores all the graph
 --- out:
-path: the path from root to end
+path: the explored tree
 */
 func dijkstraList(adjacency [][]*Neighbor, start uint32, end uint32) []*TreeNode {
 	// initialize the list
@@ -50,6 +51,16 @@ func dijkstraList(adjacency [][]*Neighbor, start uint32, end uint32) []*TreeNode
 	return tree
 }
 
+/*
+Find the shortest path from root to end
+using Dijkstra algorithm and a binary heap
+--- in:
+adjacency: the adjacency list of the graph
+root: the root of the tree
+end: the end of the path (the goal vertex) / if 0 explores all the graph
+--- out:
+path: the explored tree
+*/
 func dijkstraHeap(adjacency [][]*Neighbor, start uint32, end uint32) []*TreeNode {
 	// initialize the heap
 	heap := Heap{}
@@ -82,6 +93,15 @@ func dijkstraHeap(adjacency [][]*Neighbor, start uint32, end uint32) []*TreeNode
 	return tree
 }
 
+/*
+Find the MST in a graph using the binary heap
+--- in:
+adjacency: the adjacency list of the graph
+root: the root of the tree
+end: the end of the path (the goal vertex) / if 0 explores all the graph
+--- out:
+path: the explored tree
+*/
 func primHeap(adjacency [][]*Neighbor) ([]*TreeNode, float64) {
 
 	// initialize the heap

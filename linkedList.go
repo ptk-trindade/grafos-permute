@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 type Node struct {
 	id     uint32
 	father uint32
@@ -78,11 +76,12 @@ func (L *List) reorder(node *Node) {
 }
 
 /*
-Updates the cost to a vertex in the list (inserts if not present)
+Evaluates if the new cost is better than the old one
+and updates the cost to a vertex in the list (inserts if not present)
 --- in:
-vertex_id: the id of the vertex to update
-father: the id of the father of the vertex
-cost: cost from start to node
+vertex_id: id of the vertex
+father: id of the father
+cost: new cost from start vertex found
 */
 func (L *List) Update(vertex_id uint32, father uint32, cost float64) {
 	var updated_node *Node
@@ -112,6 +111,7 @@ func (L *List) Update(vertex_id uint32, father uint32, cost float64) {
 	L.reorder(updated_node)
 }
 
+// Remove the first element of the list
 func (L *List) Pop() *Node {
 	if L.head == nil {
 		return nil
@@ -122,45 +122,4 @@ func (L *List) Pop() *Node {
 	// L.head = L.head.next
 	// node.next = nil
 	return node
-}
-
-// --------
-func (l *List) Display() {
-	list := l.head
-	for list != nil {
-		fmt.Printf("%+v ->", list.id)
-		list = list.next
-	}
-	fmt.Println()
-}
-
-func Display(list *Node) {
-	for list != nil {
-		fmt.Printf("%v ->", list.id)
-		list = list.next
-	}
-	fmt.Println()
-}
-
-func ShowBackwards(list *Node) {
-	for list != nil {
-		fmt.Printf("%v <-", list.id)
-		list = list.prev
-	}
-	fmt.Println()
-}
-
-func (l *List) Reverse() {
-	curr := l.head
-	var prev *Node
-	l.tail = l.head
-
-	for curr != nil {
-		next := curr.next
-		curr.next = prev
-		prev = curr
-		curr = next
-	}
-	l.head = prev
-	Display(l.head)
 }

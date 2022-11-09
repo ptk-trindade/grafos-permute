@@ -7,10 +7,18 @@ type HeapNode struct {
 }
 
 type Heap struct {
-	vertexPos []int // -1 unexplored vertex, -2 explored vertex, >= 0 position in heap
-	heap      []HeapNode
+	vertexPos []int      // Position of vertex in the heap (-1 unkown vertex, -2 explored vertex), >= 0 position in heap
+	heap      []HeapNode // The heap
 }
 
+/*
+Evaluates if the new cost is better than the old one
+and updates the cost to a vertex in the list (inserts if not present)
+--- in:
+vertex_id: id of the vertex
+father: id of the father
+cost: new cost from start vertex found
+*/
 func (H *Heap) Update(vertex_id uint32, father uint32, cost float64) {
 	tree_pos := H.vertexPos[vertex_id]
 	if tree_pos == -1 { // new vertex
@@ -26,12 +34,14 @@ func (H *Heap) Update(vertex_id uint32, father uint32, cost float64) {
 	}
 }
 
+// Insert a new node in the heap
 func (H *Heap) insert(node *HeapNode) {
 	H.heap = append(H.heap, *node)
 	H.vertexPos[node.id] = len(H.heap) - 1
 	H.bubbleUp(len(H.heap) - 1)
 }
 
+// Remove the first element of the heap
 func (H *Heap) Pop() *HeapNode {
 	if len(H.heap) == 0 {
 		return nil
@@ -46,6 +56,7 @@ func (H *Heap) Pop() *HeapNode {
 	return &node
 }
 
+// Swap two nodes in the heap
 func (H *Heap) swap(parent_pos int, child_pos int) {
 	parent_id := H.heap[parent_pos].id
 	child_id := H.heap[child_pos].id
@@ -54,6 +65,7 @@ func (H *Heap) swap(parent_pos int, child_pos int) {
 	H.vertexPos[parent_id], H.vertexPos[child_id] = H.vertexPos[child_id], H.vertexPos[parent_id]
 }
 
+// Push up a node in the heap until it is in the correct position
 func (H *Heap) bubbleUp(index int) {
 	if index == 0 {
 		return
@@ -68,6 +80,7 @@ func (H *Heap) bubbleUp(index int) {
 	}
 }
 
+// Push down a node in the heap until it is in the correct position
 func (H *Heap) bubbleDown() {
 	index := 0
 
