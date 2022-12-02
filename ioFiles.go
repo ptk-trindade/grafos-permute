@@ -2,8 +2,6 @@
 
 import (
 	"bufio"
-	"bytes"
-	"fmt"
 	"log"
 	"os"
 	"regexp"
@@ -11,7 +9,7 @@ import (
 	"strings"
 )
 
-type Edge struct {
+type rawEdge struct {
 	vertex1 uint32
 	vertex2 uint32
 	weight  float64
@@ -40,25 +38,12 @@ func ReadFile(filename string) []string {
 		lines = append(lines, scanner.Text())
 	}
 
-	// -- OLD VERSION --
-	// text, err := ioutil.ReadFile(filename)
-
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// textString := strings.Replace(string(text), "\r", "", -1)
-	// fmt.Println("\n textString:\n", textString, "\n -- end --")
-	// textSlice := strings.Split(string(textString), "\n")
-
 	return lines
 }
 
 func WriteFile(filename string, text string) {
 	err := os.WriteFile(filename, []byte(text), 0644)
-	// check(err)
 
-	// err := ioutil.WriteFile(filename, []byte(text), 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -71,9 +56,9 @@ filename: name of the file to be read
 --- out:
 lenVertex: number of vertexes
 neighCount: number of neighbors of each vertex
-edges: slice of edges (struct Edge)
+edges: slice of edges (struct rawEdge)
 */
-func readInitFile(filename string) (uint32, []uint32, []Edge) {
+func readInitFile(filename string) (uint32, []uint32, []rawEdge) {
 	reg := regexp.MustCompile(`(?P<node1>\d+) (?P<node2>\d+) (?P<weight>-?\d+\.?\d*)`)
 	lines := ReadFile(filename)
 
@@ -84,11 +69,9 @@ func readInitFile(filename string) (uint32, []uint32, []Edge) {
 		log.Fatal(err)
 	}
 	lenVertex := uint32(lenVertex64 + 1) // add the 'null' vertex (0)
-	fmt.Println("lenVertex: ", lenVertex)
 
-	fmt.Println("get edges")
 	// get edges
-	var edges []Edge                                    // edges (order doesn't matter)
+	var edges []rawEdge                                 // edges (order doesn't matter)
 	var neighCount []uint32 = make([]uint32, lenVertex) // number of neighbors for each vertex
 	for i := 1; i < len(lines); i++ {
 		trimmed := strings.Trim(lines[i], " ")
@@ -105,18 +88,9 @@ func readInitFile(filename string) (uint32, []uint32, []Edge) {
 
 		neighCount[node1id64]++
 		neighCount[node2id64]++
-		edges = append(edges, Edge{uint32(node1id64), uint32(node2id64), weight}) // add edge to slice
+		edges = append(edges, rawEdge{uint32(node1id64), uint32(node2id64), weight}) // add edge to slice
 	}
 
 	return lenVertex, neighCount, edges
 
-}
-
-func tree2text(tree []*TreeNode) string {
-	var text_bytes bytes.Buffer
-	for i := 0; i < len(tree); i++ {
-		line := fmt.Sprint(tree[i].id) + "\t\t" + fmt.Sprint(tree[i].father) + "\t\t" + fmt.Sprintf("%.2f", tree[i].cost) + "\n"
-		text_bytes.WriteString(line)
-	}
-	return text_bytes.String()
 }
