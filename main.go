@@ -1,7 +1,7 @@
 ﻿package main
 
 import (
-	"errors"
+	"bytes"
 	"fmt"
 	"log"
 	"sort"
@@ -12,6 +12,18 @@ import (
 func main() {
 	fmt.Println(" --- START ---")
 
+	run_tests := "0"
+	for run_tests != "1" && run_tests != "2" {
+		fmt.Println("\nRun all tests?")
+		fmt.Println("1) Yes")
+		fmt.Println("2) No")
+		fmt.Scan(&run_tests)
+	}
+	if run_tests == "1" {
+		tests()
+		return
+	}
+
 	fmt.Print("Insert file name (with extension) \nfilename: ")
 	var filename string
 	fmt.Scan(&filename)
@@ -20,35 +32,63 @@ func main() {
 	lenVertex, degrees, edges := readInitFile(filename) // reads the file and returns the vertexes and edges
 	fmt.Println("Time reading files:", time.Since(start_time))
 
-	adjacency := make([][]*Neighbor, lenVertex)
+	adjacency := make([][]*Edge, lenVertex)
 
 	log.Println("Allocating slices")
 	// allocate memory for the slices (not crucial but decreases memory allocation)
 	for i := uint32(0); i < lenVertex; i++ {
-		adjacency[i] = make([]*Neighbor, 0, degrees[i])
+		adjacency[i] = make([]*Edge, 0, degrees[i])
 	}
 
-	log.Println("len flling edges: ", len(edges))
-	// fill the slices
-	negative_edge := false
-	for i := uint32(0); i < uint32(len(edges)); i++ {
-		if edges[i].weight < 0 {
-			negative_edge = true
+	var directed int
+	for directed != 1 { // && directed != 2
+		fmt.Println("\nIs the graph directed?")
+		fmt.Println("1) Yes")
+		fmt.Println("2) No")
+		fmt.Scan(&directed)
+	}
+
+	// var negative_edge = false
+	// create the adjacency list
+	if directed == 1 {
+		var edgeMap map[string]*Edge = make(map[string]*Edge)
+		for _, raw_edge := range edges {
+			new_edge := Edge{raw_edge.vertex1, raw_edge.vertex2, raw_edge.weight, nil}    // create the edge
+			edgeMap[fmt.Sprintf("%d_%d", raw_edge.vertex1, raw_edge.vertex2)] = &new_edge // add the edge to the map
+
+			comp_edge, exists := edgeMap[fmt.Sprintf("%d_%d", raw_edge.vertex2, raw_edge.vertex1)] // check if complementary edge exists
+			if exists {
+				new_edge.comp = comp_edge
+				new_edge.comp = &new_edge
+			}
+
+			adjacency[raw_edge.vertex1] = append(adjacency[raw_edge.vertex1], &new_edge)
+
 		}
-		adjacency[edges[i].vertex1] = append(adjacency[edges[i].vertex1], &Neighbor{vertex_id: edges[i].vertex2, weight: edges[i].weight})
-		adjacency[edges[i].vertex2] = append(adjacency[edges[i].vertex2], &Neighbor{vertex_id: edges[i].vertex1, weight: edges[i].weight})
+	} else {
+		for i := uint32(0); i < uint32(len(edges)); i++ {
+			// if edges[i].weight < 0 {
+			// 	negative_edge = true
+			// }
+			edge1 := &Edge{edges[i].vertex1, edges[i].vertex2, edges[i].weight, nil}
+			edge2 := &Edge{edges[i].vertex2, edges[i].vertex1, edges[i].weight, edge1}
+			edge1.comp = edge2
+
+			adjacency[edges[i].vertex1] = append(adjacency[edges[i].vertex1], edge1)
+			adjacency[edges[i].vertex2] = append(adjacency[edges[i].vertex2], edge2)
+		}
 	}
 
-	run_tests := "0"
+	// run_tests := "0"
 	for run_tests != "1" && run_tests != "2" {
 		fmt.Println("\nRun all tests?")
-		fmt.Println("1 - Yes")
-		fmt.Println("2 - No")
+		fmt.Println("1) Yes")
+		fmt.Println("2) No")
 		fmt.Scan(&run_tests)
 	}
 
 	if run_tests == "1" {
-		tests(adjacency, lenVertex, edges, negative_edge)
+		// tests(adjacency)
 		return
 	}
 
@@ -91,142 +131,84 @@ func main() {
 	lenVertex = lenVertex - 1
 	lenEdges := uint32(len(edges))
 	// ----- NUMBER OF VERTEX -----
-	output := "Num of vertexes: " + strconv.Itoa(int(lenVertex)) + "\n"
+	var output bytes.Buffer
+	output.WriteString("Num of vertexes: " + strconv.Itoa(int(lenVertex)) + "\n")
 
 	// ----- NUMBER OF EDGES -----
-	output += "Num of edges: " + strconv.Itoa(int(lenEdges)) + "\n"
+	output.WriteString("Num of edges: " + strconv.Itoa(int(lenEdges)) + "\n")
 
 	// ----- DEGREES -----
-	output += "\nDEGREES:\n"
-	output += "max degree: " + strconv.Itoa(int(maxDegree)) + "\n"
-	output += "min degree: " + strconv.Itoa(int(minDegree)) + "\n"
-	output += "average degree: " + strconv.FormatFloat(float64(avgDegree), 'f', 2, 32) + "\n"
-	output += "medianDegree degree: " + strconv.FormatFloat(float64(medianDegree), 'f', 2, 32) + "\n"
+	output.WriteString("\nDEGREES:\n")
+	output.WriteString("max degree: " + strconv.Itoa(int(maxDegree)) + "\n")
+	output.WriteString("min degree: " + strconv.Itoa(int(minDegree)) + "\n")
+	output.WriteString("average degree: " + strconv.FormatFloat(float64(avgDegree), 'f', 2, 32) + "\n")
+	output.WriteString("medianDegree degree: " + strconv.FormatFloat(float64(medianDegree), 'f', 2, 32) + "\n")
 
 	// ----- WEIGHTS -----
-	output += "\nWEIGHTS:\n"
-	output += "max weight: " + strconv.FormatFloat(float64(maxWeight), 'f', 2, 64) + "\n"
-	output += "min weight: " + strconv.FormatFloat(float64(minWeight), 'f', 2, 64) + "\n"
-	output += "average weight: " + strconv.FormatFloat(avgWeight, 'f', 2, 64) + "\n"
-	output += "median weight: " + strconv.FormatFloat(float64(medianWeight), 'f', 2, 64) + "\n"
+	output.WriteString("\nWEIGHTS:\n")
+	output.WriteString("max weight: " + strconv.FormatFloat(float64(maxWeight), 'f', 2, 64) + "\n")
+	output.WriteString("min weight: " + strconv.FormatFloat(float64(minWeight), 'f', 2, 64) + "\n")
+	output.WriteString("average weight: " + strconv.FormatFloat(avgWeight, 'f', 2, 64) + "\n")
+	output.WriteString("median weight: " + strconv.FormatFloat(float64(medianWeight), 'f', 2, 64) + "\n")
 
-	WriteFile("output.txt", output)
+	WriteFile("output.txt", output.String())
 
 	fmt.Println("Time writing output.txt file:", time.Since(write_time))
-	var start_str string
-	var end_str string
-	var start64 uint64
-	var end64 uint64
-	var error error = errors.New("no value assigned")
+	var source uint32
+	var sink uint32
 
-	var run string = "0"
-	if !negative_edge {
-		// ----- DIJKSTRA BINARY HEAP -----
-		for run != "1" && run != "2" {
-			fmt.Println("\nRun Dijkstra using binary heap?")
-			fmt.Println("1 - Yes")
-			fmt.Println("2 - No")
-			fmt.Scan(&run)
-		}
-
-		if run == "1" {
-			for error != nil {
-				fmt.Println("\nPick a starting vertex")
-				fmt.Scan(&start_str)
-				start64, error = strconv.ParseUint(start_str, 10, 32)
-			}
-
-			dijkstraTime := time.Now()
-			tree_heap := dijkstraHeap(adjacency, uint32(start64), uint32(0))
-			fmt.Println("Time dijkstra Heap:", time.Since(dijkstraTime))
-
-			heap_string := "id\t\tfather\t\tcost\n"
-			heap_string += tree2text(tree_heap)
-			WriteFile("dijkstraHeap.txt", heap_string)
-		}
-
-		// ----- DIJKSTRA LINKED LIST -----
-		run = "0"
-		for run != "1" && run != "2" {
-			fmt.Println("\nRun Dijkstra using Linked List?")
-			fmt.Println("1 - Yes")
-			fmt.Println("2 - No")
-			fmt.Scan(&run)
-		}
-
-		if run == "1" {
-			error = errors.New("no value assigned")
-			for error != nil {
-				fmt.Println("\nPick a starting vertex")
-				fmt.Scan(&start_str)
-				start64, error = strconv.ParseUint(start_str, 10, 32)
-			}
-
-			dijkstraTime := time.Now()
-			tree_list := dijkstraList(adjacency, uint32(start64), uint32(0))
-			fmt.Println("Time dijkstra List:", time.Since(dijkstraTime))
-
-			list_string := "id\t\tfather\t\tcost\n"
-			list_string += tree2text(tree_list)
-			WriteFile("dijkstraList.txt", list_string)
-		}
-
-		// ----- Find shortest path (using heap dijkstra) -----
-		run = "0"
-		for run != "1" && run != "2" {
-			fmt.Println("\nFind shortest path?")
-			fmt.Println("1 - Yes")
-			fmt.Println("2 - No")
-			fmt.Scan(&run)
-		}
-
-		if run == "1" {
-			error = errors.New("no value assigned")
-			for error != nil {
-				fmt.Println("\nPick a starting vertex")
-				fmt.Scan(&start_str)
-				start64, error = strconv.ParseUint(start_str, 10, 32)
-			}
-
-			error = errors.New("no value assigned")
-			for error != nil {
-				fmt.Println("\nPick a ending vertex")
-				fmt.Scan(&end_str)
-				end64, error = strconv.ParseUint(end_str, 10, 32)
-			}
-
-			path_time := time.Now()
-			tree := dijkstraHeap(adjacency, uint32(start64), uint32(end64))
-			path, cost := findPath(tree, uint32(start64), uint32(end64))
-			fmt.Println("Time finding path:", time.Since(path_time))
-
-			fmt.Println("Distance from", uint32(start64), "to", uint32(end64), ":", cost)
-			path_string := "Path from " + fmt.Sprint(uint32(start64)) + " to " + fmt.Sprint(uint32(end64)) + " (cost: " + fmt.Sprintf("%.2f", cost) + ", edges: " + fmt.Sprint(len(path)-1) + "):\n" + fmt.Sprint(path) + "\n\n"
-			WriteFile("path.txt", path_string)
-
-		}
-	} else {
-		fmt.Println("\nNegative edge found, Dijkstra cannot be run")
-	}
-
-	// MST
-	run = "0"
-	for run != "1" && run != "2" {
-		fmt.Println("\nFind MST?")
-		fmt.Println("1 - Yes")
-		fmt.Println("2 - No")
+	var run int = -1
+	// ----- DIJKSTRA BINARY HEAP -----
+	for run != 1 && run != 2 {
+		fmt.Println("\nRun Ford Fulkerson?")
+		fmt.Println("1) Yes")
+		fmt.Println("2) No")
 		fmt.Scan(&run)
 	}
 
-	if run == "1" {
-		start_mst := time.Now()
-		mst, cost := primHeap(adjacency)
-		fmt.Println("Time MST:", time.Since(start_mst))
-		mst_string := "(total cost: " + fmt.Sprintf("%.2f", cost) + ")\nid\t\tfather\t\tcost\n"
-		mst_string += tree2text(mst)
+	if run == 1 {
 
-		fmt.Println("mst cost: ", cost)
-		WriteFile("mst.txt", mst_string)
+		fmt.Println("\nPick a source vertex")
+		fmt.Scan(&source)
+
+		fmt.Println("\nPick a sink vertex")
+		fmt.Scan(&sink)
+
+		if source == 0 || sink == 0 {
+			fmt.Println("Warning: Vertex 0 does not exist")
+		}
+
+		fmt.Println("--- Finding max flow (fordFulkerson) from", source, "to", sink)
+		ford_fulkerson_time := time.Now()
+		max_flow, edgeFlow := fordFulkerson(adjacency, source, sink)
+		fmt.Println("Time running Ford Fulkerson:", time.Since(ford_fulkerson_time))
+		fmt.Println("Max flow:", max_flow)
+
+		var flow_output bytes.Buffer
+		flow_output.WriteString("Max flow: " + strconv.Itoa(int(max_flow)) + "\n")
+		flow_output.WriteString("Edges\nFrom\t\tTo\t\tCapacity/Flow\n")
+		for _, edgeF := range edgeFlow {
+			str := fmt.Sprintf("%d\t\t%d\t\t%.2f/%.2f\n", edgeF.edge.origin, edgeF.edge.dest, edgeF.edge.weight, edgeF.flow)
+			flow_output.WriteString(str)
+
+		}
+		WriteFile("ford_fulkerson.txt", flow_output.String())
+
+		fmt.Println("---Finding max flow (fordFulkersonV2) from", source, "to", sink)
+		ford_fulkerson_time = time.Now()
+		max_flow, edgeFlow = fordFulkersonV2(adjacency, source, sink)
+		fmt.Println("Time running Ford Fulkerson v2:", time.Since(ford_fulkerson_time))
+		fmt.Println("Max flow:", max_flow)
+
+		var flow_output_2 bytes.Buffer
+		flow_output_2.WriteString("Max flow: " + strconv.Itoa(int(max_flow)) + "\n")
+		flow_output_2.WriteString("Edges\nFrom\t\tTo\t\tCapacity/Flow\n")
+		for _, edgeF := range edgeFlow {
+			str := fmt.Sprintf("%d\t\t%d\t\t%.2f/%.2f\n", edgeF.edge.origin, edgeF.edge.dest, edgeF.edge.weight, edgeF.flow)
+			flow_output_2.WriteString(str)
+
+		}
+		WriteFile("ford_fulkerson_2.txt", flow_output_2.String())
 	}
 
 	fmt.Println("Time in execution:", time.Since(start_time))
