@@ -11,17 +11,17 @@ import (
 func main() {
 	fmt.Println(" --- START ---")
 
-	run_tests := "0"
-	for run_tests != "1" && run_tests != "2" {
-		fmt.Println("\nRun ALL tests? (Hint: Don't)")
-		fmt.Println("1) Yes")
-		fmt.Println("2) No")
-		fmt.Scan(&run_tests)
-	}
-	if run_tests == "1" {
-		tests()
-		return
-	}
+	// run_tests := "0"
+	// for run_tests != "1" && run_tests != "2" {
+	// 	fmt.Println("\nRun ALL tests? (Hint: Don't)")
+	// 	fmt.Println("1) Yes")
+	// 	fmt.Println("2) No")
+	// 	fmt.Scan(&run_tests)
+	// }
+	// if run_tests == "1" {
+	// 	tests()
+	// 	return
+	// }
 
 	fmt.Print("Insert file name (with extension) \nfilename: ")
 	var filename string
