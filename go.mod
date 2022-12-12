@@ -1,3 +1,3 @@
-module trab2
+module trab3
 
 go 1.19
