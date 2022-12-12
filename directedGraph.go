@@ -116,10 +116,8 @@ func fordFulkerson(adjacency [][]*Edge, source uint32, sink uint32) (float64, []
 
 		// update residual graph
 		for i := 0; i < len(path); i++ {
-			// log.Println("update edge:\t", *path[i])
 			path[i].weight -= pathCapacity
 			path[i].comp.weight += pathCapacity
-			// log.Println("updated edge:\t", *path[i])
 		}
 
 		path, pathCapacity = findPathResBFS(residual, source, sink)
@@ -209,20 +207,18 @@ func fordFulkersonV2(adjacency [][]*Edge, source uint32, sink uint32) (float64, 
 		// create tree
 		for !found && len(sourceQueue) > 0 && len(sinkQueue) > 0 {
 
-			// pop() pt1
+			// pop()
 			current = sourceQueue[0]
 			sourceQueue = sourceQueue[1:]
 
 			// add neighbors to queue
 			for _, edge := range residual[current] {
-				// log.Println("1 node edge > ", *edge)
 				if edge.weight > 0 && father[edge.dest].treeID != sourceTreeID { // edge not saturated and not visited (by this BFS)
 					if father[edge.dest].treeID == sinkTreeID { // found path
 						upEdge = edge
 						downEdge = father[edge.dest].edge
 						found = true
 						sourceQueue = append(sourceQueue, current) // not done with this node
-						// log.Println("found path in 1")
 						break
 					} else {
 						father[edge.dest] = Father{edge, sourceTreeID}
@@ -232,38 +228,30 @@ func fordFulkersonV2(adjacency [][]*Edge, source uint32, sink uint32) (float64, 
 			}
 
 			if !found { // sink tree
-				// pop() pt1
+				// pop()
 				current = sinkQueue[0]
 				sinkQueue = sinkQueue[1:]
 
 				// add neighbors to queue
 				for _, edge_comp := range residual[current] {
 					edge := edge_comp.comp
-					// log.Println("2 edge_comp > ", *edge_comp)
-					// log.Println("2 node edge > ", *edge)
 					if edge.weight > 0 && father[edge.origin].treeID != sinkTreeID { // edge not saturated and not visited (by this BFS)
-						// log.Println("2 father compare", father[edge.origin].treeID, sourceTreeID)
 						if father[edge.origin].treeID == sourceTreeID { // found path
 							upEdge = father[edge.origin].edge
 							downEdge = edge
 							found = true
-							// log.Println("found path in 2")
 							sinkQueue = append(sinkQueue, current) // not done with this node
 							break
 						} else {
 							father[edge.origin] = Father{edge, sinkTreeID}
-							// log.Println("sinkQueue, append: ", *edge)
 							sinkQueue = append(sinkQueue, edge.origin)
 						}
 					}
 				}
 			}
-			// log.Println("redo? ", found, len(sourceQueue), len(sinkQueue))
 		}
 
 		if !found {
-			// log.Println("no path found")
-			// log.Println("found:", found, "sourceQueue:", len(sourceQueue), "sinkQueue:", len(sinkQueue))
 			break // no path found
 		}
 
@@ -316,10 +304,8 @@ func fordFulkersonV2(adjacency [][]*Edge, source uint32, sink uint32) (float64, 
 
 		// update residual graph
 		for i := 0; i < len(path); i++ {
-			// log.Println("update edge:\t", *path[i])
 			path[i].weight -= pathCapacity
 			path[i].comp.weight += pathCapacity
-			// log.Println("updated edge:\t", *path[i])
 		}
 
 	}
