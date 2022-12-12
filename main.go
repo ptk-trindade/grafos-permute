@@ -3,7 +3,6 @@
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"sort"
 	"strconv"
 	"time"
@@ -14,7 +13,7 @@ func main() {
 
 	run_tests := "0"
 	for run_tests != "1" && run_tests != "2" {
-		fmt.Println("\nRun all tests?")
+		fmt.Println("\nRun ALL tests? (Hint: Don't)")
 		fmt.Println("1) Yes")
 		fmt.Println("2) No")
 		fmt.Scan(&run_tests)
@@ -34,7 +33,6 @@ func main() {
 
 	adjacency := make([][]*Edge, lenVertex)
 
-	log.Println("Allocating slices")
 	// allocate memory for the slices (not crucial but decreases memory allocation)
 	for i := uint32(0); i < lenVertex; i++ {
 		adjacency[i] = make([]*Edge, 0, degrees[i])
@@ -51,16 +49,16 @@ func main() {
 	// var negative_edge = false
 	// create the adjacency list
 	if directed == 1 {
-		var edgeMap map[string]*Edge = make(map[string]*Edge)
+		// var edgeMap map[string]*Edge = make(map[string]*Edge)
 		for _, raw_edge := range edges {
-			new_edge := Edge{raw_edge.vertex1, raw_edge.vertex2, raw_edge.weight, nil}    // create the edge
-			edgeMap[fmt.Sprintf("%d_%d", raw_edge.vertex1, raw_edge.vertex2)] = &new_edge // add the edge to the map
+			new_edge := Edge{raw_edge.vertex1, raw_edge.vertex2, raw_edge.weight, nil} // create the edge
+			// edgeMap[fmt.Sprintf("%d_%d", raw_edge.vertex1, raw_edge.vertex2)] = &new_edge // add the edge to the map
 
-			comp_edge, exists := edgeMap[fmt.Sprintf("%d_%d", raw_edge.vertex2, raw_edge.vertex1)] // check if complementary edge exists
-			if exists {
-				new_edge.comp = comp_edge
-				new_edge.comp = &new_edge
-			}
+			// comp_edge, exists := edgeMap[fmt.Sprintf("%d_%d", raw_edge.vertex2, raw_edge.vertex1)] // check if complementary edge exists
+			// if exists {
+			// new_edge.comp = comp_edge
+			// new_edge.comp = &new_edge
+			// }
 
 			adjacency[raw_edge.vertex1] = append(adjacency[raw_edge.vertex1], &new_edge)
 
@@ -77,19 +75,6 @@ func main() {
 			adjacency[edges[i].vertex1] = append(adjacency[edges[i].vertex1], edge1)
 			adjacency[edges[i].vertex2] = append(adjacency[edges[i].vertex2], edge2)
 		}
-	}
-
-	// run_tests := "0"
-	for run_tests != "1" && run_tests != "2" {
-		fmt.Println("\nRun all tests?")
-		fmt.Println("1) Yes")
-		fmt.Println("2) No")
-		fmt.Scan(&run_tests)
-	}
-
-	if run_tests == "1" {
-		// tests(adjacency)
-		return
 	}
 
 	// ----- EDGES.DESCRIBE() -----
@@ -157,58 +142,68 @@ func main() {
 	var source uint32
 	var sink uint32
 
-	var run int = -1
-	// ----- DIJKSTRA BINARY HEAP -----
-	for run != 1 && run != 2 {
+	var run int = 1
+	for run == 1 || run == 2 {
 		fmt.Println("\nRun Ford Fulkerson?")
-		fmt.Println("1) Yes")
-		fmt.Println("2) No")
+		fmt.Println("1) Run Version 1")
+		fmt.Println("2) Run Version 2")
+		fmt.Println("3) Exit")
 		fmt.Scan(&run)
-	}
 
-	if run == 1 {
+		if run == 1 { // ----- FORD FULKERSON V1 -----
 
-		fmt.Println("\nPick a source vertex")
-		fmt.Scan(&source)
+			fmt.Println("\nPick a source vertex")
+			fmt.Scan(&source)
 
-		fmt.Println("\nPick a sink vertex")
-		fmt.Scan(&sink)
+			fmt.Println("\nPick a sink vertex")
+			fmt.Scan(&sink)
 
-		if source == 0 || sink == 0 {
-			fmt.Println("Warning: Vertex 0 does not exist")
+			if source == 0 || sink == 0 {
+				fmt.Println("Warning: Vertex 0 does not exist")
+			}
+
+			fmt.Println("--- Finding max flow (fordFulkerson) from", source, "to", sink)
+			ford_fulkerson_time := time.Now()
+			max_flow, edgeFlow := fordFulkerson(adjacency, source, sink)
+			fmt.Println("Time running Ford Fulkerson:", time.Since(ford_fulkerson_time))
+			fmt.Println("Max flow:", max_flow)
+
+			var flow_output bytes.Buffer
+			flow_output.WriteString("Max flow: " + strconv.Itoa(int(max_flow)) + "\n")
+			flow_output.WriteString("Edges\nFrom\t\tTo\t\tCapacity/Flow\n")
+			for _, edgeF := range edgeFlow {
+				str := fmt.Sprintf("%d\t\t%d\t\t%.2f/%.2f\n", edgeF.edge.origin, edgeF.edge.dest, edgeF.edge.weight, edgeF.flow)
+				flow_output.WriteString(str)
+
+			}
+			WriteFile("ford_fulkersonV1.txt", flow_output.String())
+		} else if run == 2 { // ----- FORD FULKERSON V2 -----
+			fmt.Println("\nPick a source vertex")
+			fmt.Scan(&source)
+
+			fmt.Println("\nPick a sink vertex")
+			fmt.Scan(&sink)
+
+			if source == 0 || sink == 0 {
+				fmt.Println("Warning: Vertex 0 does not exist")
+			}
+
+			fmt.Println("--- Finding max flow (fordFulkersonV2) from", source, "to", sink)
+			ford_fulkerson_time := time.Now()
+			max_flow, edgeFlow := fordFulkersonV2(adjacency, source, sink)
+			fmt.Println("Time running Ford Fulkerson:", time.Since(ford_fulkerson_time))
+			fmt.Println("Max flow:", max_flow)
+
+			var flow_output bytes.Buffer
+			flow_output.WriteString("Max flow: " + strconv.Itoa(int(max_flow)) + "\n")
+			flow_output.WriteString("Edges\nFrom\t\tTo\t\tCapacity/Flow\n")
+			for _, edgeF := range edgeFlow {
+				str := fmt.Sprintf("%d\t\t%d\t\t%.2f/%.2f\n", edgeF.edge.origin, edgeF.edge.dest, edgeF.edge.weight, edgeF.flow)
+				flow_output.WriteString(str)
+
+			}
+			WriteFile("ford_fulkersonV2.txt", flow_output.String())
 		}
-
-		fmt.Println("--- Finding max flow (fordFulkerson) from", source, "to", sink)
-		ford_fulkerson_time := time.Now()
-		max_flow, edgeFlow := fordFulkerson(adjacency, source, sink)
-		fmt.Println("Time running Ford Fulkerson:", time.Since(ford_fulkerson_time))
-		fmt.Println("Max flow:", max_flow)
-
-		var flow_output bytes.Buffer
-		flow_output.WriteString("Max flow: " + strconv.Itoa(int(max_flow)) + "\n")
-		flow_output.WriteString("Edges\nFrom\t\tTo\t\tCapacity/Flow\n")
-		for _, edgeF := range edgeFlow {
-			str := fmt.Sprintf("%d\t\t%d\t\t%.2f/%.2f\n", edgeF.edge.origin, edgeF.edge.dest, edgeF.edge.weight, edgeF.flow)
-			flow_output.WriteString(str)
-
-		}
-		WriteFile("ford_fulkerson.txt", flow_output.String())
-
-		fmt.Println("---Finding max flow (fordFulkersonV2) from", source, "to", sink)
-		ford_fulkerson_time = time.Now()
-		max_flow, edgeFlow = fordFulkersonV2(adjacency, source, sink)
-		fmt.Println("Time running Ford Fulkerson v2:", time.Since(ford_fulkerson_time))
-		fmt.Println("Max flow:", max_flow)
-
-		var flow_output_2 bytes.Buffer
-		flow_output_2.WriteString("Max flow: " + strconv.Itoa(int(max_flow)) + "\n")
-		flow_output_2.WriteString("Edges\nFrom\t\tTo\t\tCapacity/Flow\n")
-		for _, edgeF := range edgeFlow {
-			str := fmt.Sprintf("%d\t\t%d\t\t%.2f/%.2f\n", edgeF.edge.origin, edgeF.edge.dest, edgeF.edge.weight, edgeF.flow)
-			flow_output_2.WriteString(str)
-
-		}
-		WriteFile("ford_fulkerson_2.txt", flow_output_2.String())
 	}
 
 	fmt.Println("Time in execution:", time.Since(start_time))
