@@ -57,4 +57,4 @@ The program will ask you the name of your graph file. And than the methods you w
 
 
 ## Don't wanna flex but...
-For the versions 2 and 3 of this project the professor had the students present their work and vote for which they found the best. My project won in both votations with all students voting for my project.
+For the versions 2 and 3 of this project the professor had the students present their work and vote for which they found the best. In both, my project won with all students voting for my project.
